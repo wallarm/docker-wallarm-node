@@ -1,0 +1,3 @@
+---
+syncnode:
+  triggers_dir: /etc/wallarm-dist/triggers.d

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+if [ -z "$PROTONDB_UPDATED" -a -z "$LOM_UPDATED" ]; then
+	exit 42
+fi
+
+if [ ! -f  /run/nginx-wallarm.pid ]; then
+  exit 42
+fi
+
+pid="$(cat /run/nginx-wallarm.pid)"
+
+if [ -z "$pid" ]; then
+  exit 42
+fi
+
+kill -HUP "$pid"

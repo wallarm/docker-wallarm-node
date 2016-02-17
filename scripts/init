@@ -1,0 +1,93 @@
+#!/bin/sh
+
+set -e
+
+prepare_dirs() {
+  LOGDIR=/var/log/wallarm
+  TARANTOOL_LOGFILE=$LOGDIR/tarantool.log
+
+  chown wallarm:wallarm $LOGDIR
+  chmod 0750 $LOGDIR
+
+  touch $TARANTOOL_LOGFILE
+  chown wallarm:wallarm $TARANTOOL_LOGFILE
+
+  touch /etc/crontab /etc/cron.d/*
+
+  mkdir -p /run/supervisor
+}
+
+register_node() {
+  args="--batch --no-sync"
+
+  if [ -n "${DEPLOY_FORCE}" ]; then
+    args="$args --force"
+  fi
+
+  if [ -n "$WALLARM_API_HOST" ]; then
+    args="$args -H $WALLARM_API_HOST"
+  fi
+
+  if [ -n "$WALLARM_API_PORT" ]; then
+    args="$args -P $WALLARM_API_PORT"
+  fi
+
+  if [ "${WALLARM_API_USE_SSL:-true}" = "false" -o "${WALLARM_API_USE_SSL:-true}" = "no" ]; then
+    args="$args --no-ssl"
+  fi
+
+  if [ "${WALLARM_API_CA_VERIFY:-true}" = "false" -o "${WALLARM_API_CA_VERIFY:-true}" = "no" ]; then
+    args="$args --no-verify"
+  fi
+
+  if [ -e /etc/wallarm/node.yaml -a -s /etc/wallarm/node.yaml ]; then
+    echo "Node registartion skiped - node.yaml already exists"
+  elif [ -n "$NODE_UUID" -a -n "$NODE_SECRET" ]; then
+    /usr/share/wallarm-common/addnode $args --uuid "$NODE_UUID" --secret "$NODE_SECRET"
+  else
+    /usr/share/wallarm-common/addnode $args --username "$DEPLOY_USER" --password "$DEPLOY_PASSWORD"
+  fi
+}
+
+sync_node() {
+  /usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml -l STDOUT
+}
+
+configure_nginx() {
+  [ -n "$NGINX_BACKEND" ] || return
+
+  if [ "$NGINX_BACKEND" = "${NGINX_BACKEND#http://}" -a \
+       "$NGINX_BACKEND" = "${NGINX_BACKEND#https://}" ];
+  then
+    sed -i -e "s#proxy_pass .*#proxy_pass http://$NGINX_BACKEND;#" \
+      /etc/nginx-wallarm/sites-enabled/default
+  else
+    sed -i -e "s#proxy_pass .*#proxy_pass $NGINX_BACKEND;#" \
+      /etc/nginx-wallarm/sites-enabled/default
+  fi
+
+  sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
+    /etc/nginx-wallarm/sites-enabled/default
+}
+
+
+if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
+  if [ -n "$TARANTOOL_MEMORY_GB" ]; then
+    SLAB_ALLOC_ARENA=$TARANTOOL_MEMORY_GB
+    export SLAB_ALLOC_ARENA
+  fi
+fi
+
+
+if [ ! -f "/etc/wallarm/license.key" ]; then
+  echo "ERROR: no license key in /etc/wallarm/license.key" >&2
+  exit 1
+fi
+
+
+prepare_dirs
+register_node
+sync_node
+configure_nginx
+
+exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
