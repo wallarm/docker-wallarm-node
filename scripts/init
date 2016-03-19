@@ -50,7 +50,18 @@ register_node() {
 }
 
 sync_node() {
-  /usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml -l STDOUT
+  cmd="/usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml -l STDOUT"
+
+  while true; do
+    if $cmd; then
+      break
+    elif [ -f /etc/wallarm/proton.db -a -f /etc/wallarm/proton.db ]; then
+      break
+    else
+      echo "Wait before next syncnode attempt..."
+      sleep 5
+    fi
+  done
 }
 
 configure_nginx() {
