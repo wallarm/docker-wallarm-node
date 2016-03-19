@@ -65,7 +65,7 @@ sync_node() {
 }
 
 configure_nginx() {
-  [ -n "$NGINX_BACKEND" ] || return
+  [ -n "$NGINX_BACKEND" ] || return 0
 
   if [ "$NGINX_BACKEND" = "${NGINX_BACKEND#http://}" -a \
        "$NGINX_BACKEND" = "${NGINX_BACKEND#https://}" ];
