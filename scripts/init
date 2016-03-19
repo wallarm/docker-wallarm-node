@@ -20,6 +20,9 @@ prepare_dirs() {
 register_node() {
   args="--batch --no-sync"
 
+  WALLARM_API_USE_SSL="${WALLARM_API_USE_SSL:-true}"
+  WALLARM_API_CA_VERIFY="${WALLARM_API_CA_VERIFY:-true}"
+
   if [ -n "${DEPLOY_FORCE}" ]; then
     args="$args --force"
   fi
@@ -32,11 +35,17 @@ register_node() {
     args="$args -P $WALLARM_API_PORT"
   fi
 
-  if [ "${WALLARM_API_USE_SSL:-true}" = "false" -o "${WALLARM_API_USE_SSL:-true}" = "no" ]; then
+  if [ "$WALLARM_API_USE_SSL" = "false" -o \
+       "$WALLARM_API_USE_SSL" = "False" -o \
+       "$WALLARM_API_USE_SSL" = "no" ];
+  then
     args="$args --no-ssl"
   fi
 
-  if [ "${WALLARM_API_CA_VERIFY:-true}" = "false" -o "${WALLARM_API_CA_VERIFY:-true}" = "no" ]; then
+  if [ "$WALLARM_API_CA_VERIFY" = "false" -o \
+       "$WALLARM_API_CA_VERIFY" = "False" -o \
+       "$WALLARM_API_CA_VERIFY" = "no" ];
+  then
     args="$args --no-verify"
   fi
 
