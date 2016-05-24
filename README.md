@@ -62,7 +62,7 @@ Wallarm Node configuration is done via NGINX config file. To simplify this proce
 #### Simplified mode
 
 * `NGINX_BACKEND` — backend address for all incoming requests.
-If not has "http://" или "https://" prefix , then uses "http://". Read more in proxy_pass.
+If it doesn't have "http://" or "https://" prefix , then "http://" is used by default. Read more in proxy_pass.
 * `WALLARM_MODE` — nginx-wallarm mode. Read more in wallarm_mode.
 
 #### Configuration files
