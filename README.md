@@ -1,19 +1,21 @@
 # What is Wallarm Node
 
-Docker container is another option to deploy Wallarm Node. As in the case of installation from the Linux package, Wallarm Node will operate as a reverse-proxy server which analyzes and passes through all the requests for protected application/API. 
+Docker container is another option to deploy Wallarm Node. Wallarm Node is Nginx-based and will operate as a reverse-proxy server which analyzes and passes through all the requests for protected application/API. 
 
-The container contains all Wallarm Node subsystems (it's a so-called fat container). Although it contradicts to Docker's ideology "one process — one container", it significantly simplifies Wallarm Node deployment keeping the "one logical service — one container" ideology.
+The container contains all Wallarm Node subsystems.
 
 # 30-second start
 
-For a quick start of Wallarm Node container you need:
+1. Sign up at https://my.wallarm.com. 
+
+2. Make sure you have:
 
  * **/path/to/license.key** — path to the license key (check it in the registration email) on the host machine;
- * **example.com** — protected site;
- * **deploy@example.com** — login for my.wallarm.com;
+ * **example.com** — protected application or API;
+ * **deploy@example.com** — your login for my.wallarm.com;
  * **very_secret** — password for my.wallarm.com.
 
-In most simple case, all the Wallarm Node deployment is just executing command to run container with necessary parameters:
+3. Run a container with necessary parameters:
 
  ```
 docker run -d -v /path/to/license.key:/etc/wallarm/license.key -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=example.com -p 80:80 wallarm/node
@@ -28,7 +30,7 @@ For further configuration, place additional configuration files inside the conta
 
 Every new Wallarm Node is required registering at Wallarm Cloud API. If you already tried out 30-second installation guide (abode), you're already familiar with one of the three following options: 
 
-#### Autoregistration
+#### 1. Autoregistration
 
 Set environment variables DEPLOY_USER, DEPLOY_PASSWORD with your credentials for my.wallarm.com. The container will automatically be registered in the cloud when you first start it.
 
@@ -38,7 +40,7 @@ By default, the container fails if one with that name exists already. To avoid i
 docker run -d -v /etc/wallarm/license.key -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=93.184.216.34 wallarm/node
 ```
 
-#### Using the known node credentials
+#### 2. Using the known node credentials
 
 To access the Wallarm Cloud each node uses its `uuid` and `secret` credentials. You can pass them into the environment variables `NODE_UUID` and `NODE_SECRET`.
 
@@ -46,7 +48,7 @@ To access the Wallarm Cloud each node uses its `uuid` and `secret` credentials. 
 docker run -d -v /etc/wallarm/license.key -e "NODE_UUID=00000000-0000-0000-0000-000000000000" -e NODE_SECRET="0000000000000000000000000000000000000000000000000000000000000000" -e NGINX_BACKEND=93.184.216.34 wallarm/node
 ```
 
-#### Configuration file
+#### 3. Configuration file
 
 If you already have a `node.yaml` (configuration file), pass it into the Docker container as an external volume:
 
@@ -57,13 +59,13 @@ docker run -d -v /etc/wallarm/license.key -v /etc/wallarm/node.yaml -e NGINX_BAC
 
 # Nginx-wallarm configuration
 
-Wallarm Node configuration is done via NGINX config file. To simplify this process in case of container, you can use environment variables  `NGINX_BACKEND` and `WALLARM_MODE`.
+Wallarm Node configuration is done via Nginx config file. To simplify this process in case of container, you can use environment variables  `NGINX_BACKEND` and `WALLARM_MODE`.
 
 #### Simplified mode
 
 * `NGINX_BACKEND` — backend address for all incoming requests.
 If it doesn't have "http://" or "https://" prefix , then "http://" is used by default. Read more in proxy_pass.
-* `WALLARM_MODE` — nginx-wallarm mode. Read more in wallarm_mode.
+* `WALLARM_MODE` — Nginx-wallarm mode. Read more in wallarm_mode.
 
 #### Configuration files
 
@@ -77,7 +79,7 @@ Directories used by nginx:
 
 For behaviour-based attack detection Wallarm Node uses in-memory storage to save requests for a particular timeframe. Tarantool settings are set with the following environmental variables
 
-* `SLAB_ALLOC_ARENA` — Memory size (in gigabytes) allocated for storing serialized requests.
+* `SLAB_ALLOC_ARENA` — memory size (in gigabytes) allocated for storing serialized requests.
 * `SLAB_ALLOC_MAXIMAL` — maximum size (in bytes) of the serialized request.
 
 
