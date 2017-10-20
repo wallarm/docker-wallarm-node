@@ -10,7 +10,6 @@ The container contains all Wallarm Node subsystems.
 
 2. Make sure you have:
 
- * **/path/to/license.key** — path to the license key (check it in the registration email) on the host machine;
  * **example.com** — protected application or API;
  * **deploy@example.com** — your login for my.wallarm.com;
  * **very_secret** — password for my.wallarm.com.
@@ -18,7 +17,7 @@ The container contains all Wallarm Node subsystems.
 3. Run a container with necessary parameters:
 
  ```
-docker run -d -v /path/to/license.key:/etc/wallarm/license.key -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=example.com -p 80:80 wallarm/node
+docker run -d -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=example.com -p 80:80 wallarm/node
 ```
 
 As a result, the container should be running, and the protected website should be available on server port 80. New Node should be registered at Wallarm Cloud. 
@@ -37,12 +36,12 @@ Set environment variables DEPLOY_USER, DEPLOY_PASSWORD with your credentials for
 By default, the container fails if one with that name exists already. To avoid it use the environment variable `DEPLOY_FORCE=true`.
 
 ```
-docker run -d -v /etc/wallarm/license.key -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=93.184.216.34 wallarm/node
+docker run -d -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=93.184.216.34 wallarm/node
 ```
 
 #### 2. Using the known node credentials
 
-To access the Wallarm Cloud each node uses its `uuid` and `secret` credentials. You can pass them into the environment variables `NODE_UUID` and `NODE_SECRET`.
+To access the Wallarm Cloud each node uses its `uuid` and `secret` credentials. You can pass them into the environment variables `NODE_UUID` and `NODE_SECRET`. You also need to pass license.key into container.
 
 ```
 docker run -d -v /etc/wallarm/license.key -e "NODE_UUID=00000000-0000-0000-0000-000000000000" -e NODE_SECRET="0000000000000000000000000000000000000000000000000000000000000000" -e NGINX_BACKEND=93.184.216.34 wallarm/node
@@ -59,7 +58,7 @@ docker run -d -v /etc/wallarm/license.key -v /etc/wallarm/node.yaml -e NGINX_BAC
 
 # Nginx-wallarm configuration
 
-Wallarm Node configuration is done via Nginx config file. To simplify this process in case of container, you can use environment variables  `NGINX_BACKEND` and `WALLARM_MODE`.
+Wallarm Node configuration is done via Nginx config file. To simplify this process in case of container, you can use environment variables `NGINX_BACKEND` and `WALLARM_MODE`.
 
 #### Simplified mode
 
