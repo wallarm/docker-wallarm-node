@@ -1,6 +1,6 @@
 # What is Wallarm
 
-Wallarm AI-powered security platform automates application protection and security testing. Hundreds of customers already rely on Wallarm to secure websites, microservices and APIs running on private and public clouds. Wallarm AI enables application-specific dynamic WAF rules, proactively tests for vulnerabilities, and creates feedback loop to improve detection accuracy. 
+Wallarm AI-powered security platform automates application protection and security testing. Hundreds of customers already rely on Wallarm to secure websites, microservices and APIs running on private and public clouds. Wallarm AI enables application-specific dynamic WAF rules, proactively DAST tests for vulnerabilities, and creates feedback loop to improve detection accuracy. 
 
 # 30-second start
 
