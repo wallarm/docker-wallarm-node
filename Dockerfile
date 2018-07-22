@@ -21,12 +21,9 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \
     && sed -i -e 's|/var/log/wallarm/brute\.log|/var/log/wallarm/brute-detect\.log|' /etc/logrotate.d/wallarm-common \
     && sed -i -e 's|/usr/share/wallarm-common/syncnode|/usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml|' /etc/cron.d/wallarm-node-nginx \
-    && rm -rf /etc/wallarm/triggers.d/ \
-    && mkdir -p /etc/wallarm-dist/triggers.d \
     && sed -i -e '\@<Plugin syslog>@,\@</Plugin>@ s/^/#/' /etc/collectd/collectd.conf
 
 COPY conf/node.yaml /etc/wallarm-dist/
-COPY scripts/trigger /etc/wallarm-dist/triggers.d/nginx
 COPY scripts/init /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
