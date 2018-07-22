@@ -15,6 +15,7 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
         nginx \
         wallarm-node \
         libnginx-mod-http-wallarm \
+    && apt-get -y --force-yes --no-install-recommends -t stretch-test install wallarm-node \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \

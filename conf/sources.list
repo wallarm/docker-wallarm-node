@@ -1,1 +1,2 @@
 deb [signed-by=/usr/share/keyrings/wallarm.gpg] http://repo.wallarm.com/debian/wallarm-node stretch/
+deb http://repo.wallarm.com/debian/wallarm-node stretch-test/
