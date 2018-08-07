@@ -12,6 +12,7 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
         logrotate \
         monitoring-plugins \
         supervisor \
+        nginx-wallarm \
         wallarm-node \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
