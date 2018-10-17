@@ -12,8 +12,9 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
         logrotate \
         monitoring-plugins \
         supervisor \
-        nginx-wallarm \
+        nginx \
         wallarm-node \
+        libnginx-mod-http-wallarm \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \
@@ -28,6 +29,7 @@ COPY scripts/trigger /etc/wallarm-dist/triggers.d/nginx
 COPY scripts/init /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
+COPY conf/default /etc/nginx/sites-enabled/
 
 EXPOSE 80 443
 
