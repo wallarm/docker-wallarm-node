@@ -80,14 +80,14 @@ configure_nginx() {
        "$NGINX_BACKEND" = "${NGINX_BACKEND#https://}" ];
   then
     sed -i -e "s#proxy_pass .*#proxy_pass http://$NGINX_BACKEND;#" \
-      /etc/nginx-wallarm/sites-enabled/default
+      /etc/nginx/sites-enabled/default
   else
     sed -i -e "s#proxy_pass .*#proxy_pass $NGINX_BACKEND;#" \
-      /etc/nginx-wallarm/sites-enabled/default
+      /etc/nginx/sites-enabled/default
   fi
 
   sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
-    /etc/nginx-wallarm/sites-enabled/default
+    /etc/nginx/sites-enabled/default
 }
 
 

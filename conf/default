@@ -1,0 +1,33 @@
+#
+# by default, proxy all to 127.0.0.1:8080
+#
+
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server ipv6only=on;
+        #listen 443 ssl;
+
+        server_name localhost;
+
+        #ssl_certificate cert.pem;
+        #ssl_certificate_key cert.key;
+
+        root /usr/share/nginx-wallarm/html;
+
+        index index.html index.htm;
+
+        # wallarm_mode monitoring;
+        # wallarm_instance 1;
+
+        location = /wallarm-status {
+                allow 127.0.0.1;
+                allow ::1;
+                deny all;
+                wallarm_status on;
+        }
+
+        location / {
+                proxy_pass http://127.0.0.1:8080;
+                include proxy_params;
+        }
+}
