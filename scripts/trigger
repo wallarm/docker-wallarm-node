@@ -6,11 +6,11 @@ if [ -z "$PROTONDB_UPDATED" -a -z "$LOM_UPDATED" ]; then
 	exit 42
 fi
 
-if [ ! -f  /run/nginx-wallarm.pid ]; then
+if [ ! -f  /run/nginx.pid ]; then
   exit 42
 fi
 
-pid="$(cat /run/nginx-wallarm.pid)"
+pid="$(cat /run/nginx.pid)"
 
 if [ -z "$pid" ]; then
   exit 42

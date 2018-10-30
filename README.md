@@ -71,8 +71,8 @@ If it doesn't have "http://" or "https://" prefix , then "http://" is used by de
 #### Configuration files
 
 Directories used by nginx:
-* /etc/nginx-wallarm/conf.d — common settings
-* /etc/nginx-wallarm/sites-enabled — virtual host settings
+* /etc/nginx/conf.d — common settings
+* /etc/nginx/sites-enabled — virtual host settings
 * /var/www/html — static files
 
 
@@ -87,7 +87,7 @@ For behaviour-based attack detection Wallarm Node uses in-memory storage to save
 # Log rotation
 
 Logs are written in the following directories:
-* /var/log/nginx-wallarm/ — nginx logs
+* /var/log/nginx/ — nginx logs
 * /var/log/wallarm/ — various wallarm-specific subsystem logs 
 
 By default, they are rotated once a day. Changing the rotation parameters by environment variables is not provided — use configuration files in /etc/logrotate.d/ instead.
