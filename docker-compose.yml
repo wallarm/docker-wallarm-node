@@ -13,6 +13,7 @@ services:
       TARANTOOL_HOST: tarantool
       NGINX_BACKEND: ${NGINX_BACKEND:-example.org}
       WALLARM_MODE: ${WALLARM_MODE:-monitoring}
+      WALLARM_INSTANCE: 1
     depends_on:
       - tarantool
     ports:

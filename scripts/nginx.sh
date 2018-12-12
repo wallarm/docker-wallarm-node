@@ -29,6 +29,11 @@ configure_nginx() {
 
   sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
     /etc/nginx/sites-enabled/default
+
+  if [ -n "$WALLARM_INSTANCE" ]; then
+    sed -i -e "s@# wallarm_instance .*@wallarm_instance ${WALLARM_INSTANCE};@" \
+      /etc/nginx/sites-enabled/default
+  fi
 }
 
 configure_tarantool_upstream() {
