@@ -1,0 +1,19 @@
+version: '3'
+services:
+  tarantool:
+    image: &image ${WALLARM_NODE_IMAGE:-wallarm/sidecar}
+    command: ["/usr/local/bin/tarantool.sh"]
+    environment:
+      WALLARM_API_TOKEN: &api_token ${WALLARM_API_TOKEN}
+  nginx:
+    image: *image
+    command: ["/usr/local/bin/nginx.sh"]
+    environment:
+      WALLARM_API_TOKEN: *api_token
+      TARANTOOL_HOST: tarantool
+      NGINX_BACKEND: ${NGINX_BACKEND:-example.org}
+      WALLARM_MODE: ${WALLARM_MODE:-monitoring}
+    depends_on:
+      - tarantool
+    ports:
+      - ${WALLARM_NODE_PORT:-8080}:80
