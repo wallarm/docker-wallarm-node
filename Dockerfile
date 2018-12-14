@@ -29,7 +29,7 @@ COPY conf/node.yaml /etc/wallarm-dist/
 COPY scripts/trigger /etc/wallarm-dist/triggers.d/nginx
 COPY scripts/init scripts/nginx.sh scripts/tarantool.sh /usr/local/bin/
 COPY conf/supervisord*.conf /etc/supervisor/
-COPY conf/logrotate.conf /etc/
+COPY conf/wallarm-node-tarantool /etc/cron.d/
 COPY conf/default /etc/nginx/sites-enabled/
 
 EXPOSE 80 443

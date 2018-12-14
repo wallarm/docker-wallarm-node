@@ -38,7 +38,7 @@ configure_nginx() {
 
 configure_tarantool_upstream() {
   TARANTOOL_HOST="${TARANTOOL_HOST:-127.0.0.1}"
-  TARANTOOL_PORT="${TARANTOOL_PORT:-3301}"
+  TARANTOOL_PORT="${TARANTOOL_PORT:-3313}"
 
   cat <<EOF >/etc/nginx/conf.d/tarantool-upstream.conf
 upstream wallarm_tarantool {

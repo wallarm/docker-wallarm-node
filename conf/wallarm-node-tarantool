@@ -1,0 +1,15 @@
+#
+# cron jobs for Wallarm WAF
+#
+
+PATH="/usr/share/wallarm-common:/bin:/sbin:/usr/bin:/usr/sbin"
+
+* *     * * *   wallarm   timeout -k 1m 1h /usr/share/wallarm-common/sync-markers -l STDOUT
+* *     * * *   wallarm   timeout -k 1m 3h /usr/share/wallarm-common/export-attacks -l STDOUT
+* *     * * *   wallarm   timeout -k 15s 11m /usr/share/wallarm-common/export-counters -l STDOUT
+* *     * * *   wallarm   timeout -k 15s 11m /usr/share/wallarm-common/export-clusterization-data -l STDOUT
+* *     * * *   wallarm   timeout -k 15s 11m /usr/share/wallarm-common/sync-brute-clusters -l STDOUT
+* *     * * *   wallarm   timeout -k 1m 3h /usr/share/wallarm-common/export-spots -l STDOUT
+* *     * * *   wallarm   timeout -k 15s 6m /usr/share/wallarm-common/brute-detect -l STDOUT
+
+# vim: ft=crontab
