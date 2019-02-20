@@ -24,6 +24,7 @@ server {
                 allow ::1;
                 deny all;
                 wallarm_status on;
+                wallarm_mode   off;
         }
 
         location / {
