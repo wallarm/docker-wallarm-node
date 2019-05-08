@@ -67,12 +67,12 @@ Wallarm Node configuration is done via Nginx config file. To simplify this proce
 * `NGINX_BACKEND` — backend address for all incoming requests.
 If it doesn't have "http://" or "https://" prefix , then "http://" is used by default. Read more in [proxy_pass](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass).
 * `WALLARM_MODE` — Nginx-wallarm mode. Read more in [wallarm_mode](https://docs.wallarm.com/en/admin-en/configure-parameters-en.html#wallarmmode).
+  *  monitoring (default): all requests are processed, but none of them are blocked even if an attack is detected.
   *  off: requests are not processed.
-  *  monitoring: all requests are processed, but none of them is blocked even if an attack is detected.
   *  block: all requests where an attack was detected are blocked.
-    aggressive: all non-standard requests are blocked. For example, mapping a string in the field usually used for passing a number. Use this mode with extreme caution.
+  *  aggressive: all non-standard requests are blocked. For example, mapping a string in the field usually used for passing a number. Use this mode with extreme caution.
 * `WALLARM_API_HOST` - Wallarm Cloud endpoing
-  * api.wallarm.com - EU Cloud (default)
+  * api.wallarm.com (default) - EU Cloud
   * us1.api.wallarm.com - US Cloud, used if you're logged into us1.my.wallarm.com
 * `TARANTOOL_MEMORY_GB` - Amount of memory allocated to Tarantool, used for in memory processing of request
 
