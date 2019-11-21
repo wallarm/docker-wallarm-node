@@ -1,1 +1,1 @@
-deb https://plus-pkgs.nginx.com/debian stretch nginx-plus
+deb [signed-by=/usr/share/keyrings/nginx-plus.gpg] https://plus-pkgs.nginx.com/debian stretch nginx-plus
