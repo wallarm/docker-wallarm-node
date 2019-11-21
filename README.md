@@ -1,14 +1,14 @@
 # What is Wallarm
 
-Wallarm AI-powered security platform automates application protection and security testing. Hundreds of customers already rely on Wallarm to secure websites, microservices and APIs running on private and public clouds. Wallarm AI enables application-specific dynamic WAF rules, proactively DAST tests for vulnerabilities, and creates feedback loop to improve detection accuracy. 
+Wallarm AI-powered security platform automates application protection and security testing. Hundreds of customers already rely on Wallarm to secure websites, microservices and APIs running on private and public clouds. Wallarm AI enables application-specific dynamic WAF rules, proactively DAST tests for vulnerabilities, and creates feedback loop to improve detection accuracy.
 
 # 30-second start
 
-Docker container is another option to deploy Wallarm Node. Wallarm Node is Nginx-based and will operate as a reverse-proxy server which analyzes and passes through all the requests for protected application/API. 
+Docker container is another option to deploy Wallarm Node. Wallarm Node is Nginx-based and will operate as a reverse-proxy server which analyzes and passes through all the requests for protected application/API.
 
 The container contains all Wallarm Node subsystems.
 
-1. Sign up at https://my.wallarm.com. 
+1. Sign up at https://my.wallarm.com.
 
 2. Make sure you have:
 
@@ -22,14 +22,14 @@ The container contains all Wallarm Node subsystems.
 docker run -d -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=example.com -p 80:80 wallarm/node
 ```
 
-As a result, the container should be running, and the protected website should be available on server port 80. New Node should be registered at Wallarm Cloud. 
+As a result, the container should be running, and the protected website should be available on server port 80. New Node should be registered at Wallarm Cloud.
 
-For further configuration, place additional configuration files inside the container. 
+For further configuration, place additional configuration files inside the container.
 
 
 # Connecting to the cloud
 
-Every new Wallarm Node is required registering at Wallarm Cloud API. If you already tried out 30-second installation guide (abode), you're already familiar with one of the three following options: 
+Every new Wallarm Node is required registering at Wallarm Cloud API. If you already tried out 30-second installation guide (abode), you're already familiar with one of the three following options:
 
 #### 1. Autoregistration
 
@@ -88,7 +88,7 @@ For behaviour-based attack detection Wallarm Node uses in-memory storage to save
 
 Logs are written in the following directories:
 * /var/log/nginx/ — nginx logs
-* /var/log/wallarm/ — various wallarm-specific subsystem logs 
+* /var/log/wallarm/ — various wallarm-specific subsystem logs
 
 By default, they are rotated once a day. Changing the rotation parameters by environment variables is not provided — use configuration files in /etc/logrotate.d/ instead.
 
@@ -101,4 +101,20 @@ Scripts calling example:
 ```
 docker exec -it wallarm-node /usr/lib/nagios-plugins/check_wallarm_tarantool_timeframe -w 1800 -c 900
 docker exec -it wallarm-node /usr/lib/nagios-plugins/check_wallarm_export_delay -w 120 -c 300
+```
+
+# How to create a docker image for Nginx Plus
+
+First, replace `nginx-repo.crt` and `nginx-repo.key` inside the ssl folder with yours acquired from Nginx
+
+Then create the image
+
+```
+docker build . -t wallarm-plus
+```
+
+And launch it with the created image
+
+```
+docker run -d -e DEPLOY_USER="deploy@example.com" -e DEPLOY_PASSWORD="very_secret" -e NGINX_BACKEND=example.com -p 80:80 wallarm-plus
 ```
