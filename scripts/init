@@ -35,26 +35,36 @@ register_node() {
     args="$args -P $WALLARM_API_PORT"
   fi
 
-  if [ "$WALLARM_API_USE_SSL" = "false" -o \
-       "$WALLARM_API_USE_SSL" = "False" -o \
-       "$WALLARM_API_USE_SSL" = "no" ];
+  if [ x"$WALLARM_API_USE_SSL" = x"false" ] \
+     || [ x"$WALLARM_API_USE_SSL" = x"False" ] \
+     || [ x"$WALLARM_API_USE_SSL" = x"no" ]
   then
     args="$args --no-ssl"
   fi
 
-  if [ "$WALLARM_API_CA_VERIFY" = "false" -o \
-       "$WALLARM_API_CA_VERIFY" = "False" -o \
-       "$WALLARM_API_CA_VERIFY" = "no" ];
+  if [ x"$WALLARM_API_CA_VERIFY" = x"false" ] \
+     || [ x"$WALLARM_API_CA_VERIFY" = x"False" ] \
+     || [ x"$WALLARM_API_CA_VERIFY" = x"no" ]
   then
     args="$args --no-verify"
   fi
 
-  if [ -e /etc/wallarm/node.yaml -a -s /etc/wallarm/node.yaml ]; then
-    echo "Node registartion skiped - node.yaml already exists"
-  elif [ -n "$NODE_UUID" -a -n "$NODE_SECRET" ]; then
-    /usr/share/wallarm-common/addnode $args --uuid "$NODE_UUID" --secret "$NODE_SECRET"
+  if [ -e /etc/wallarm/node.yaml ] \
+     && [ -s /etc/wallarm/node.yaml ]
+  then
+    echo "Node registartion skipped - node.yaml already exists"
+  elif [ -n "$NODE_UUID" ] \
+       && [ -n "$NODE_SECRET" ]
+  then
+    /usr/share/wallarm-common/addnode \
+      $args \
+      --uuid "$NODE_UUID" \
+      --secret "$NODE_SECRET"
   else
-    /usr/share/wallarm-common/addnode $args --username "$DEPLOY_USER" --password "$DEPLOY_PASSWORD"
+    /usr/share/wallarm-common/addnode \
+      $args \
+      --username "$DEPLOY_USER" \
+      --password "$DEPLOY_PASSWORD"
   fi
 }
 
@@ -64,7 +74,7 @@ sync_node() {
   while true; do
     if $cmd; then
       break
-    elif [ -f /etc/wallarm/proton.db -a -f /etc/wallarm/proton.db ]; then
+    elif [ -f /etc/wallarm/proton.db ] && [ -f /etc/wallarm/proton.db ]; then
       break
     else
       echo "Wait before next syncnode attempt..."
@@ -76,8 +86,8 @@ sync_node() {
 configure_nginx() {
   [ -n "$NGINX_BACKEND" ] || return 0
 
-  if [ "$NGINX_BACKEND" = "${NGINX_BACKEND#http://}" -a \
-       "$NGINX_BACKEND" = "${NGINX_BACKEND#https://}" ];
+  if [ "$NGINX_BACKEND" = "${NGINX_BACKEND#http://}" ] \
+     && [ "$NGINX_BACKEND" = "${NGINX_BACKEND#https://}" ]
   then
     sed -i -e "s#proxy_pass .*#proxy_pass http://$NGINX_BACKEND;#" \
       /etc/nginx/sites-enabled/default
@@ -99,7 +109,7 @@ if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
 fi
 
 
-if [ -z "$DEPLOY_USER" -o -z "$DEPLOY_PASSWORD" ]; then
+if [ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]; then
   if [ ! -f "/etc/wallarm/license.key" ]; then
     echo "ERROR: no DEPLOY_USER or DEPLOY_PASSWORD and no license key in /etc/wallarm/license.key" >&2
     exit 1

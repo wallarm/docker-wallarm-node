@@ -2,7 +2,8 @@
 
 set -e
 
-if [ -z "$PROTONDB_UPDATED" -a -z "$LOM_UPDATED" ]; then
+if [ -z "$PROTONDB_UPDATED" ] \
+   && [ -z "$LOM_UPDATED" ]; then
 	exit 42
 fi
 

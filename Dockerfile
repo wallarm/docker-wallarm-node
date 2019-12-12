@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:buster
 MAINTAINER Wallarm Support Team <support@wallarm.com>
 
 ENV DEBIAN_FRONTEND noninteractive
