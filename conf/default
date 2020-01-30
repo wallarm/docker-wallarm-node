@@ -19,14 +19,6 @@ server {
         # wallarm_mode monitoring;
         # wallarm_instance 1;
 
-        location = /wallarm-status {
-                allow 127.0.0.1;
-                allow ::1;
-                deny all;
-                wallarm_status on;
-                wallarm_mode   off;
-        }
-
         location / {
                 proxy_pass http://127.0.0.1:8080;
                 include proxy_params;
