@@ -30,6 +30,7 @@ COPY scripts/init /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/
+COPY conf/wallarm-status.conf /etc/nginx/conf.d/
 
 EXPOSE 80 443
 
