@@ -136,10 +136,6 @@ if [ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]; then
   fi
 fi
 
-if [ -z "$NGINX_BACKEND" ]; then
-  echo "ERROR: no NGINX_BACKEND specified, nothing to protect" >&2
-  exit 1
-fi
 
 prepare_dirs
 register_node
