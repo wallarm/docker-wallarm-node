@@ -84,7 +84,10 @@ sync_node() {
 }
 
 configure_acl() {
-  sed -i -e "s@# wallarm_acl .*@wallarm_acl default;@" /etc/nginx/sites-enabled/default
+  [ -n "$NGINX_BACKEND" ] && \
+    sed -i -e "s@# wallarm_acl .*@wallarm_acl default;@" \
+      /etc/nginx/sites-enabled/default
+
   sed -i -e '/sync-blacklist/s/^#//' /etc/cron.d/wallarm-node-nginx
   grep -q "sync_blacklist:" /etc/wallarm/node.yaml || \
     printf 'sync_blacklist:\n    nginx_url: http://127.0.0.9:80/wallarm-acl' >> /etc/wallarm/node.yaml
