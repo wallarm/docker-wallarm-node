@@ -1,1 +1,1 @@
-deb [signed-by=/usr/share/keyrings/wallarm.gpg] http://repo.wallarm.com/debian/wallarm-node buster/2.16/
+deb [signed-by=/usr/share/keyrings/wallarm.gpg] http://repo.wallarm.com/debian/wallarm-node buster/2.18/
