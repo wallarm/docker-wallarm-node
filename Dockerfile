@@ -13,8 +13,18 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
         monitoring-plugins \
         supervisor \
         nginx \
-        wallarm-node \
-        libnginx-mod-http-wallarm \
+        libproton210=2.10.13 \
+        ruby-proton=2.10.13 \
+        wallarm-node=2.10.4 \
+        wallarm-node-nginx=2.10.4 \
+        wallarm-node-tarantool=2.10.4 \
+        wallarm-common=2.10.4 \
+        wallarm-monitoring=2.10.4 \
+        ruby-wallarm-api=2.10.4 \
+        wallarm-tarantool=1.10.8-1 \
+        tarantool=1.9.2.7.g3736c3798-1 \
+        ruby-tarantool16=0.0.7-4 \
+        libnginx-mod-http-wallarm=2.10.7-1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \
