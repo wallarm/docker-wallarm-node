@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -144,6 +144,12 @@ prepare_dirs
 register_node
 sync_node
 configure_nginx
-[ ! -z ${WALLARM_ACL_ENABLE+x} ] && configure_acl
+if [ ! -z ${WALLARM_ACL_ENABLE+x} ] \
+ && [ x"${WALLARM_ACL_ENABLE^^}" != x"FALSE" ] \
+ && [ x"${WALLARM_ACL_ENABLE^^}" != x"NO" ] \
+ && [ x"${WALLARM_ACL_ENABLE^^}" != x"OFF" ]
+then
+  configure_acl
+fi
 
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
