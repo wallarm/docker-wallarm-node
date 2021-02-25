@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -144,10 +144,7 @@ prepare_dirs
 register_node
 sync_node
 configure_nginx
-if [ ! -z ${WALLARM_ACL_ENABLE+x} ] \
- && [ x"${WALLARM_ACL_ENABLE^^}" != x"FALSE" ] \
- && [ x"${WALLARM_ACL_ENABLE^^}" != x"NO" ] \
- && [ x"${WALLARM_ACL_ENABLE^^}" != x"OFF" ]
+if [ x"${WALLARM_ACL_ENABLE}" = x"true" ]
 then
   configure_acl
 fi
