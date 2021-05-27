@@ -121,8 +121,31 @@ configure_nginx() {
 
   sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
     /etc/nginx/sites-enabled/default
+
+  if [ -n "$WALLARM_STATUS_ALLOW" ]; then
+    craft_wallarm_status_snippet
+    insert_wallarm_status_snippet
+  fi
 }
 
+craft_wallarm_status_snippet() {
+  {
+    printf "\tlocation /wallarm-status {\n"
+    for cidr in $(echo "$WALLARM_STATUS_ALLOW" | sed "s/,/ /g"); do
+      printf "\t\tallow %s;\n" "$cidr"
+    done
+    printf "\t\tdeny all;\n"
+    printf "\t\twallarm_status on;\n"
+    printf "\t\twallarm_mode off;\n"
+    printf "\t}\n\n"
+  } >/tmp/wallarm-status.conf
+}
+
+insert_wallarm_status_snippet() {
+  line_for_insert=$(grep -n "location / {" /etc/nginx/sites-enabled/default | cut -f 1 -d:)
+  line_for_insert=$((line_for_insert - 1))
+  sed -i "${line_for_insert}r /tmp/wallarm-status.conf" /etc/nginx/sites-enabled/default
+}
 
 if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
   if [ -n "$TARANTOOL_MEMORY_GB" ]; then
