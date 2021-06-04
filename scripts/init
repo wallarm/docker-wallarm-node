@@ -83,29 +83,6 @@ sync_node() {
   done
 }
 
-configure_acl() {
-  [ -n "$NGINX_BACKEND" ] && \
-    sed -i -e "s@# wallarm_acl .*@wallarm_acl default;@" \
-      /etc/nginx/sites-enabled/default
-
-  sed -i -e '/sync-blacklist/s/^#//' /etc/cron.d/wallarm-node-nginx
-  grep -q "sync_blacklist:" /etc/wallarm/node.yaml || \
-    printf 'sync_blacklist:\n    nginx_url: http://127.0.0.9:80/wallarm-acl' >> /etc/wallarm/node.yaml
-  /usr/sbin/nginx -c /etc/nginx/nginx-blacklistonly.conf &
-  cmd="/usr/share/wallarm-common/sync-blacklist --one-time -l STDOUT"
-
-  while true; do
-    if runuser -u wallarm -- $cmd; then
-      break
-    else
-      echo "Wait before next sync-blacklist attempt..."
-      sleep 5
-    fi
-  done
-  kill $!
-  wait
-}
-
 configure_nginx() {
   [ -n "$NGINX_BACKEND" ] || return 0
 
@@ -167,9 +144,5 @@ prepare_dirs
 register_node
 sync_node
 configure_nginx
-if [ x"${WALLARM_ACL_ENABLE}" = x"true" ]
-then
-  configure_acl
-fi
 
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
