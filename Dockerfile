@@ -35,8 +35,6 @@ COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/
 COPY conf/collectd.conf /etc/collectd/
-COPY conf/wallarm-acl.conf /etc/nginx/conf.d/
-COPY conf/nginx-blacklistonly.conf /etc/nginx/
 
 EXPOSE 80 443
 
