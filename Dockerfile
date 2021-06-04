@@ -27,13 +27,13 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
     && rm -rf /etc/wallarm/triggers.d/ \
     && mkdir -p /etc/wallarm-dist/triggers.d
 
+RUN cp /usr/share/doc/libnginx-mod-http-wallarm/examples/wallarm-status.conf /etc/nginx/conf.d/
 COPY conf/node.yaml /etc/wallarm-dist/
 COPY scripts/trigger /etc/wallarm-dist/triggers.d/nginx
 COPY scripts/init /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/
-COPY conf/wallarm-status.conf /etc/nginx/conf.d/
 COPY conf/collectd.conf /etc/collectd/
 COPY conf/wallarm-acl.conf /etc/nginx/conf.d/
 COPY conf/nginx-blacklistonly.conf /etc/nginx/
