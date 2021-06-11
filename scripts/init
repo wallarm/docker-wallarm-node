@@ -103,6 +103,12 @@ configure_nginx() {
     craft_wallarm_status_snippet
     insert_wallarm_status_snippet
   fi
+
+  if [ x"${WALLARM_NGINX_LOG_TO_FILES}" != x"true" ]
+  then
+    ln -sf /dev/stdout /var/log/nginx/access.log
+    ln -sf /dev/stderr /var/log/nginx/error.log
+  fi
 }
 
 craft_wallarm_status_snippet() {
