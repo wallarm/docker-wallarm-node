@@ -32,6 +32,7 @@ RUN cp /usr/share/doc/libnginx-mod-http-wallarm/examples/wallarm-status.conf /et
 COPY conf/node.yaml /etc/wallarm-dist/
 COPY scripts/trigger /etc/wallarm-dist/triggers.d/nginx
 COPY scripts/init /usr/local/bin/
+COPY scripts/addnode_loop /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/

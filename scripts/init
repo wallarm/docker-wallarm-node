@@ -1,10 +1,5 @@
 #!/bin/sh
 
-if [ x"$WALLARM_FALLBACK" = x"false" ]
-then
-  set -e
-fi
-
 prepare_dirs() {
   LOGDIR=/var/log/wallarm
   TARANTOOL_LOGFILE=$LOGDIR/tarantool.log
@@ -132,6 +127,16 @@ insert_wallarm_status_snippet() {
   line_for_insert=$((line_for_insert - 1))
   sed -i "${line_for_insert}r /tmp/wallarm-status.conf" /etc/nginx/sites-enabled/default
 }
+
+if [ "${1}" = "--source-only" ]
+then
+  return
+fi
+
+if [ x"$WALLARM_FALLBACK" = x"false" ]
+then
+  set -e
+fi
 
 if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
   if [ -n "$TARANTOOL_MEMORY_GB" ]; then
