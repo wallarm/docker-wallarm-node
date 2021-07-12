@@ -1,0 +1,15 @@
+#!/bin/bash
+
+source /usr/local/bin/init --source-only
+cmd="register_node"
+
+while ! [ -s /etc/wallarm/node.yaml ]; do
+  if $cmd; then
+    break
+  else
+    echo "Wait before next addnode attempt..."
+    sleep 5
+  fi
+done
+
+exit 0
