@@ -67,7 +67,7 @@ register_node() {
 }
 
 sync_node() {
-  cmd="/usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml -l STDOUT"
+  cmd="/usr/share/wallarm-common/syncnode -l STDOUT"
 
   for i in $(seq 1 3); do
     if $cmd; then
