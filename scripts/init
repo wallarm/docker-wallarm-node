@@ -82,6 +82,12 @@ sync_node() {
 }
 
 configure_nginx() {
+  if [ x"${WALLARM_NGINX_LOG_TO_FILES}" != x"true" ]
+  then
+    ln -sf /dev/stdout /var/log/nginx/access.log
+    ln -sf /dev/stderr /var/log/nginx/error.log
+  fi
+
   [ -n "$NGINX_BACKEND" ] || return 0
 
   if [ "$NGINX_BACKEND" = "${NGINX_BACKEND#http://}" ] \
@@ -100,12 +106,6 @@ configure_nginx() {
   if [ -n "$WALLARM_STATUS_ALLOW" ]; then
     craft_wallarm_status_snippet
     insert_wallarm_status_snippet
-  fi
-
-  if [ x"${WALLARM_NGINX_LOG_TO_FILES}" != x"true" ]
-  then
-    ln -sf /dev/stdout /var/log/nginx/access.log
-    ln -sf /dev/stderr /var/log/nginx/error.log
   fi
 }
 
