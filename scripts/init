@@ -103,6 +103,11 @@ configure_nginx() {
   sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
     /etc/nginx/sites-enabled/default
 
+  if [ -n "$WALLARM_APPLICATION" ]; then
+    sed -i -e "s|# wallarm_instance .*|wallarm_instance $WALLARM_APPLICATION;|" \
+      /etc/nginx/sites-enabled/default
+  fi
+
   if [ -n "$WALLARM_STATUS_ALLOW" ]; then
     craft_wallarm_status_snippet
     insert_wallarm_status_snippet
