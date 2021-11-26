@@ -94,6 +94,15 @@ configure_nginx() {
       /etc/nginx/sites-enabled/default
   fi
 
+  if [ ! -z "$NGINX_PORT" ]; then
+    sed  -i -r "s#(listen.+)80(.+)#\1$NGINX_PORT\2#" \
+      /etc/nginx/sites-enabled/default
+    sed  -i -r "s#(listen.+)80(.+)#\1$NGINX_PORT\2#" \
+      /etc/nginx/conf.d/wallarm-status.conf
+    sed  -i -r "s#http://127.0.0.8/wallarm-status#http://127.0.0.8:$NGINX_PORT/wallarm-status#" \
+      /etc/collectd/wallarm-collectd.conf.d/nginx-wallarm.conf
+  fi
+
   sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
     /etc/nginx/sites-enabled/default
 
