@@ -47,22 +47,47 @@ register_node() {
     args="$args --no-verify"
   fi
 
+  if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
+  then
+    args="$args --postanalytic-only"
+  fi
+
+  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
+    args="$args --filtering-only"
+  fi
+
   if [ -e /etc/wallarm/node.yaml ] \
      && [ -s /etc/wallarm/node.yaml ]
   then
     echo "Node registartion skipped - node.yaml already exists"
   elif [ -n "$NODE_UUID" ] \
-       && [ -n "$NODE_SECRET" ]
+    && [ -n "$NODE_SECRET" ] \
+    && [ -n "$DEPLOY_TOKEN" ]
+  then
+    /usr/share/wallarm-common/register-node \
+      $args \
+        --uuid "$NODE_UUID" \
+        --secret "$NODE_SECRET" \
+        --token "$DEPLOY_TOKEN"
+  elif [ -n "$NODE_UUID" ] \
+    && [ -n "$NODE_SECRET" ]
   then
     /usr/share/wallarm-common/addnode \
       $args \
       --uuid "$NODE_UUID" \
       --secret "$NODE_SECRET"
-  else
+  elif [ -n "$DEPLOY_USER" ] \
+    && [ -n "$DEPLOY_PASSWORD" ]
+  then
     /usr/share/wallarm-common/addnode \
       $args \
       --username "$DEPLOY_USER" \
       --password "$DEPLOY_PASSWORD"
+  else
+    /usr/share/wallarm-common/register-node \
+      $args --token "$DEPLOY_TOKEN"
   fi
 }
 
@@ -137,6 +162,22 @@ insert_wallarm_status_snippet() {
   sed -i "${line_for_insert}r /tmp/wallarm-status.conf" /etc/nginx/sites-enabled/default
 }
 
+configure_services() {
+  if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
+  then
+    rm /etc/cron.d/wallarm-node-nginx
+    mv /root/supervisord.post-analytics.conf /etc/supervisor/supervisord.conf
+    sed  -e 's/# post-analytic://' -i /etc/cron.d/wallarm-node-tarantool
+  fi
+
+  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
+    rm /etc/cron.d/wallarm-node-tarantool
+    mv /root/supervisord.filtering.conf /etc/supervisor/supervisord.conf
+  fi
+}
+
 if [ "${1}" = "--source-only" ]
 then
   return
@@ -154,16 +195,22 @@ if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
   fi
 fi
 
+if [ -n "$POSTANALYTIC_ADDRESS" ] && [ -n "$POSTANALYTIC_ONLY" ]; then
+  echo "ERROR: noooo you can't just set postanalytic and filtering type at the same time..."
 
-if [ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]; then
+  exit 1
+fi
+
+if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$DEPLOY_TOKEN" ]; then
   if [ ! -f "/etc/wallarm/license.key" ]; then
-    echo "ERROR: no DEPLOY_USER or DEPLOY_PASSWORD and no license key in /etc/wallarm/license.key" >&2
+    echo "ERROR: no DEPLOY_USER, DEPLOY_PASSWORD or DEPLOY_TOKEN and no license key in /etc/wallarm/license.key" >&2
     exit 1
   fi
 fi
 
 
 prepare_dirs
+configure_services
 register_node
 sync_node
 configure_nginx
