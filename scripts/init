@@ -113,7 +113,7 @@ configure_nginx() {
     /etc/nginx/sites-enabled/default
 
   if [ -n "$WALLARM_APPLICATION" ]; then
-    sed -i -e "s|# wallarm_instance .*|wallarm_instance $WALLARM_APPLICATION;|" \
+    sed -i -e "s|# wallarm_application .*|wallarm_application $WALLARM_APPLICATION;|" \
       /etc/nginx/sites-enabled/default
   fi
 
