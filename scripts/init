@@ -207,8 +207,8 @@ if [ -n "$POSTANALYTIC_ADDRESS" ] && [ -n "$POSTANALYTIC_ONLY" ]; then
 fi
 
 if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$DEPLOY_TOKEN" ]; then
-  if [ ! -f "/etc/wallarm/license.key" ]; then
-    echo "ERROR: no DEPLOY_USER, DEPLOY_PASSWORD or DEPLOY_TOKEN and no license key in /etc/wallarm/license.key" >&2
+  if [ ! -f "/etc/wallarm/private.key" ]; then
+    echo "ERROR: no DEPLOY_USER, DEPLOY_PASSWORD or DEPLOY_TOKEN and no private key in /etc/wallarm/private.key" >&2
     exit 1
   fi
 fi
