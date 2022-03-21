@@ -173,13 +173,13 @@ configure_services() {
     || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
   then
     rm /etc/cron.d/wallarm-node-nginx
-    mv /root/supervisord.post-analytics.conf /etc/supervisor/supervisord.conf
+    mv /etc/supervisor/supervisord.post-analytics.conf.example /etc/supervisor/supervisord.conf
     sed  -e 's/# post-analytic://' -i /etc/cron.d/wallarm-node-tarantool
   fi
 
   if [ -n "$POSTANALYTIC_ADDRESS" ]; then
     rm /etc/cron.d/wallarm-node-tarantool
-    mv /root/supervisord.filtering.conf /etc/supervisor/supervisord.conf
+    mv /etc/supervisor/supervisord.filtering.conf.example /etc/supervisor/supervisord.conf
   fi
 }
 
