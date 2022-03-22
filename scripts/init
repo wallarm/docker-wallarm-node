@@ -215,7 +215,7 @@ fi
 
 
 prepare_dirs
-configure_services
+#configure_services
 register_node
 sync_node
 configure_nginx
