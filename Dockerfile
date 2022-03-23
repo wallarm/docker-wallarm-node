@@ -28,7 +28,11 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
 RUN cp /usr/share/doc/libnginx-mod-http-wallarm/examples/wallarm-status.conf /etc/nginx/conf.d/
 COPY scripts/init /usr/local/bin/
 COPY scripts/addnode_loop /usr/local/bin/
+
 COPY conf/supervisord.conf /etc/supervisor/
+COPY conf/supervisord.filtering.conf /etc/supervisor/supervisord.filtering.conf.example
+COPY conf/supervisord.post-analytics.conf /etc/supervisor/supervisord.post-analytics.conf.example
+
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/
 COPY conf/collectd.conf /etc/collectd/
