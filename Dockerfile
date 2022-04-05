@@ -28,6 +28,7 @@ RUN cp /usr/share/doc/libnginx-mod-http-wallarm/examples/wallarm-status.conf /et
 COPY scripts/init /usr/local/bin/
 COPY scripts/addnode_loop /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
+COPY conf/supervisord-nginx.conf /etc/supervisor/
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/
 COPY conf/collectd.conf /etc/collectd/

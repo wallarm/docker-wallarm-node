@@ -160,17 +160,24 @@ if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
 fi
 
 
+if [ "${1}" != "--nginx-only" ]
+then
 if [ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]; then
   if [ ! -f "/etc/wallarm/license.key" ]; then
     echo "ERROR: no DEPLOY_USER or DEPLOY_PASSWORD and no license key in /etc/wallarm/license.key" >&2
     exit 1
   fi
 fi
+fi
 
 
 prepare_dirs
-register_node
-sync_node
-configure_nginx
-
-exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+if [ "${1}" != "--nginx-only" ]
+then
+  register_node
+  sync_node
+  exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+else
+  configure_nginx
+  exec /usr/bin/supervisord -c /etc/supervisor/supervisord-nginx.conf
+fi
