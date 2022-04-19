@@ -29,6 +29,7 @@ COPY scripts/init /usr/local/bin/
 COPY scripts/addnode_loop /usr/local/bin/
 
 COPY conf/supervisord.conf /etc/supervisor/
+COPY conf/supervisord-nginx.conf /etc/supervisor/
 COPY conf/supervisord.filtering.conf /etc/supervisor/supervisord.filtering.conf.example
 COPY conf/supervisord.post-analytics.conf /etc/supervisor/supervisord.post-analytics.conf.example
 

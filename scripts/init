@@ -203,6 +203,8 @@ if [ -n "$POSTANALYTIC_ADDRESS" ] && [ -n "$POSTANALYTIC_ONLY" ]; then
 
   exit 1
 fi
+if [ "${1}" != "--nginx-only" ]
+then
 
 if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$WALLARM_API_TOKEN" ]; then
   if [ ! -f "/etc/wallarm/private.key" ]; then
@@ -210,12 +212,16 @@ if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$WALLARM_API_TO
     exit 1
   fi
 fi
+fi
 
 
 prepare_dirs
-#configure_services
-register_node
-sync_node
-configure_nginx
-
-exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+if [ "${1}" != "--nginx-only" ]
+then
+  register_node
+  sync_node
+  exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+else
+  configure_nginx
+  exec /usr/bin/supervisord -c /etc/supervisor/supervisord-nginx.conf
+fi
