@@ -1,3 +1,1 @@
-#deb [signed-by=/usr/share/keyrings/wallarm.gpg] http://repo.wallarm.com/debian/wallarm-node buster/3.6/
-deb [trusted=yes] http://repo.wallarm.com/debian/wallarm-node buster/3.7/
-deb [trusted=yes] http://repo.infra.onsec.ru/debian/wallarm-node buster/3.7-dev/
+deb [signed-by=/usr/share/keyrings/wallarm.gpg] http://repo.wallarm.com/debian/wallarm-node buster/4.0/
