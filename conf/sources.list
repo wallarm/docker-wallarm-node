@@ -1,3 +1,3 @@
-#deb [signed-by=/usr/share/keyrings/wallarm.gpg] http://repo.wallarm.com/debian/wallarm-node buster/3.6/
-deb [trusted=yes] http://repo.wallarm.com/debian/wallarm-node buster/3.7/
-deb [trusted=yes] http://repo.infra.onsec.ru/debian/wallarm-node buster/3.7-dev/
+deb [signed-by=/usr/share/keyrings/wallarm.gpg] https://repo.wallarm.com/debian/wallarm-node bullseye/4.1/
+deb [signed-by=/usr/share/keyrings/wallarm.gpg] https://repolite.wallarm.com/v1/debian/wallarm-node-infra bullseye/4.1-dev/
+deb [signed-by=/usr/share/keyrings/nginx.gpg] http://nginx.org/packages/debian bullseye nginx
