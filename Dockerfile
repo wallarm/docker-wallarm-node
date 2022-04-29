@@ -47,7 +47,7 @@ COPY conf/supervisord.filtering.conf /etc/supervisor/supervisord.filtering.conf.
 COPY conf/supervisord.post-analytics.conf /etc/supervisor/supervisord.post-analytics.conf.example
 
 COPY conf/logrotate.conf /etc/
-COPY conf/default /etc/nginx/sites-enabled/
+COPY conf/default /etc/nginx/conf.d/default.conf
 COPY conf/collectd.conf /etc/collectd/
 
 EXPOSE 80 443
