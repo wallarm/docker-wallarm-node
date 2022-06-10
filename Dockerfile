@@ -25,14 +25,8 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
         bsdmainutils \
         sudo \
     && apt-get -y --no-install-recommends --allow-downgrades -t bullseye/4.1-dev install \
-        wallarm-node=4.1.0-1~20220429.090000.55b75b7.b6 \
-        wallarm-common=4.1.0-1~20220429.090000.55b75b7.b6 \
-        ruby-wallarm-rest-client=4.1.0-1~20220429.090000.55b75b7.b6 \
-        ruby-wallarm-api=4.1.0-1~20220429.090000.55b75b7.b6 \
-        wallarm-node-nginx=4.1.0-1~20220429.090000.55b75b7.b6 \
-        wallarm-node-tarantool=4.1.0-1~20220429.090000.55b75b7.b6 \
-        wallarm-monitoring=4.1.0-1~20220429.090000.55b75b7.b6 \
-        wallarm-export-environment=4.1.0-1~20220429.090000.55b75b7.b6 \
+        libproton41=4.1.0-1~20220527.122721.d898dc0b.b10 \
+        ruby-proton=4.1.0-1~20220527.122721.d898dc0b.b10 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool
