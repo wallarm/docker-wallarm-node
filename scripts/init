@@ -123,6 +123,10 @@ configure_nginx() {
       /etc/nginx/sites-enabled/default
   fi
 
+  if [ ! -z "$DISABLE_IPV6" ]; then
+    sed  -i '/ipv6only/d' /etc/nginx/sites-enabled/default
+  fi
+
   if [ ! -z "$NGINX_PORT" ]; then
     sed  -i -r "s#(listen.+)80(.+)#\1$NGINX_PORT\2#" \
       /etc/nginx/sites-enabled/default
