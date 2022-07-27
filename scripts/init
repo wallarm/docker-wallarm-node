@@ -216,6 +216,7 @@ if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$WALLARM_API_TO
 fi
 
 
+printenv >> /etc/environment
 prepare_dirs
 #configure_services
 register_node
