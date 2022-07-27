@@ -24,9 +24,9 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
         iptables \
         bsdmainutils \
         sudo \
-    && apt-get -y --no-install-recommends --allow-downgrades -t bullseye/4.1-dev install \
-        libproton41=4.1.0-1~20220701.162403.9757cfef.b12 \
-        ruby-proton=4.1.0-1~20220701.162403.9757cfef.b12 \
+#    && apt-get -y --no-install-recommends --allow-downgrades -t bullseye/4.1-dev install \
+#        libproton41=4.1.0-1~20220725.142440.8f696da6.b29 \
+#        ruby-proton=4.1.0-1~20220725.142440.8f696da6.b29 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool
