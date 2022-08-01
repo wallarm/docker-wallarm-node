@@ -95,7 +95,7 @@ sync_node() {
   for i in $(seq 1 3); do
     if $cmd; then
       break
-    elif [ -f /etc/wallarm/proton.db ] && [ -f /etc/wallarm/lom ]; then
+    elif [ -f /etc/wallarm/proton.db ] && [ -f /etc/wallarm/custom_ruleset ]; then
       break
     else
       echo "Wait before next syncnode attempt..."
@@ -121,6 +121,10 @@ configure_nginx() {
   else
     sed -i -e "s#proxy_pass .*#proxy_pass $NGINX_BACKEND;#" \
       /etc/nginx/sites-enabled/default
+  fi
+
+  if [ ! -z "$DISABLE_IPV6" ]; then
+    sed  -i '/ipv6only/d' /etc/nginx/sites-enabled/default
   fi
 
   if [ ! -z "$NGINX_PORT" ]; then
@@ -212,6 +216,7 @@ if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$WALLARM_API_TO
 fi
 
 
+printenv >> /etc/environment
 prepare_dirs
 #configure_services
 register_node
