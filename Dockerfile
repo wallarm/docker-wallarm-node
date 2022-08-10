@@ -26,7 +26,7 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
 
 RUN cp /usr/share/doc/libnginx-mod-http-wallarm/examples/wallarm-status.conf /etc/nginx/conf.d/
 COPY scripts/init /usr/local/bin/
-COPY scripts/addnode_loop /usr/local/bin/
+COPY scripts/registernode_loop /usr/local/bin/
 
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/supervisord.filtering.conf /etc/supervisor/supervisord.filtering.conf.example
