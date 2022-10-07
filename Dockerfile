@@ -22,7 +22,7 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
         iptables \
         bsdmainutils \
         sudo \
-        socat \
+        stunnel \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool
@@ -35,6 +35,8 @@ COPY scripts/registernode_loop /usr/local/bin/
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/supervisord.filtering.conf /etc/supervisor/supervisord.filtering.conf.example
 COPY conf/supervisord.post-analytics.conf /etc/supervisor/supervisord.post-analytics.conf.example
+COPY conf/certs/*.pem /etc/stunnel/
+COPY conf/stunnel.conf* /etc/stunnel/
 
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/conf.d/default.conf

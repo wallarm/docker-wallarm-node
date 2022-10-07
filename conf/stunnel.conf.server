@@ -1,0 +1,14 @@
+foreground = yes
+debug = 7
+output = /dev/stdout
+syslog = no
+
+cert = /etc/stunnel/servercert.pem
+key = /etc/stunnel/serverkey.pem
+verify = 2
+CAfile = /etc/stunnel/clientcert.pem
+options = NO_SSLv2
+
+[tarantool]
+accept = 0.0.0.0:3314
+connect = 127.0.0.1:3313

@@ -178,12 +178,15 @@ configure_services() {
     mv /etc/supervisor/supervisord.post-analytics.conf.example /etc/supervisor/supervisord.conf
     sed  -e 's/# post-analytic://' -i /etc/cron.d/wallarm-node-tarantool
     rm /etc/collectd/wallarm-collectd.conf.d/nginx-wallarm.conf
+    mv /etc/stunnel/stunnel.conf.server /etc/stunnel/stunnel.conf
   fi
 
   if [ -n "$POSTANALYTIC_ADDRESS" ]; then
     rm /etc/cron.d/wallarm-node-tarantool
     mv /etc/supervisor/supervisord.filtering.conf.example /etc/supervisor/supervisord.conf
     rm /etc/collectd/wallarm-collectd.conf.d/wallarm-tarantool.conf
+    mv /etc/stunnel/stunnel.conf.client /etc/stunnel/stunnel.conf
+    sed -i -e "s|%POSTANALYTIC_ADDRESS%|$POSTANALYTIC_ADDRESS|g" /etc/stunnel/stunnel.conf
   fi
 }
 

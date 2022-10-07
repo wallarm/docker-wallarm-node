@@ -1,0 +1,2 @@
+openssl req -nodes -new -days 9999 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -x509 -keyout serverkey.pem -out servercert.pem
+openssl req -nodes -new -days 9999 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -x509 -keyout clientkey.pem -out clientcert.pem

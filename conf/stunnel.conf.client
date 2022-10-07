@@ -1,0 +1,15 @@
+foreground = yes
+debug = 7
+output = /dev/stdout
+syslog = no
+
+cert = /etc/stunnel/clientcert.pem
+key = /etc/stunnel/clientkey.pem
+verify = 2
+CAfile = /etc/stunnel/servercert.pem
+options = NO_SSLv2
+
+[tarantool]
+client = yes
+accept = 127.0.0.1:3313
+connect = %POSTANALYTIC_ADDRESS%
