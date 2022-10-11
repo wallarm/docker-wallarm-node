@@ -29,7 +29,7 @@ csr_cert.add_extension extension_factory.create_extension('keyUsage', 'keyEnciph
 csr_cert.add_extension extension_factory.create_extension('subjectKeyIdentifier', 'hash')
 # csr_cert.add_extension extension_factory.create_extension('extKeyUsage', 'clientAuth')
 
-csr_cert.sign node_api_root_key, OpenSSL::Digest.new('SHA1')
+csr_cert.sign node_api_root_key, OpenSSL::Digest::SHA256.new
 
 open 'node_client_cert.pem', 'w' do |io|
   io.write csr_cert.to_pem

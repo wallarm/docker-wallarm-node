@@ -34,7 +34,7 @@ ca_cert.add_extension extension_factory.create_extension('subjectKeyIdentifier',
 ca_cert.add_extension extension_factory.create_extension('basicConstraints', 'CA:TRUE', true)
 ca_cert.add_extension extension_factory.create_extension('keyUsage', 'cRLSign,keyCertSign', true)
 
-ca_cert.sign node_api_root, OpenSSL::Digest.new('SHA1')
+ca_cert.sign node_api_root, OpenSSL::Digest::SHA256.new
 
 open 'node_root_public_key.pem', 'w', 0400 do |io|
   io.write ca_cert.to_pem

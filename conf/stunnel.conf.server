@@ -5,7 +5,7 @@ syslog = yes
 
 cert = /etc/stunnel/node_server_cert.pem
 key = /etc/stunnel/node_server_private_key.pem
-verify = 2
+verifyChain = yes
 CAfile = /etc/stunnel/node_root_public_key.pem
 options = NO_SSLv2
 
