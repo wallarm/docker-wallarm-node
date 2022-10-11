@@ -1,12 +1,12 @@
 foreground = yes
 debug = 7
 output = /dev/stdout
-syslog = no
+syslog = yes
 
-cert = /etc/stunnel/servercert.pem
-key = /etc/stunnel/serverkey.pem
+cert = /etc/stunnel/node_server_cert.pem
+key = /etc/stunnel/node_server_private_key.pem
 verify = 2
-CAfile = /etc/stunnel/clientcert.pem
+CAfile = /etc/stunnel/node_root_public_key.pem
 options = NO_SSLv2
 
 [tarantool]
