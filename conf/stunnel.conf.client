@@ -1,0 +1,15 @@
+foreground = yes
+debug = 7
+output = /dev/stdout
+syslog = yes
+
+cert = /etc/stunnel/node_client_cert.pem
+key = /etc/stunnel/node_client_private_key.pem
+verify = 2
+CAfile = /etc/stunnel/node_root_public_key.pem
+options = NO_SSLv2
+
+[tarantool]
+client = yes
+accept = 127.0.0.1:3313
+connect = %POSTANALYTIC_ADDRESS%
