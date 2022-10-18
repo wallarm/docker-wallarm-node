@@ -25,7 +25,8 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
         stunnel \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && chown -R wallarm:wallarm /var/lib/wallarm-tarantool
+    && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \
+    && sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/cron
 
 RUN cp /usr/share/doc/nginx-module-wallarm/examples/wallarm-status.conf /etc/nginx/conf.d/ \
     && sed -i -e '/^worker_processes.*/a load_module modules/ngx_http_wallarm_module.so;' /etc/nginx/nginx.conf
