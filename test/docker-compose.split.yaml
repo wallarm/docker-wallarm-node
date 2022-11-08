@@ -5,7 +5,7 @@ services:
     container_name: node
     image: ${NODE_IMAGE}
     env_file:
-      - ../env.ini
+      - ../.env
     environment:
       POSTANALYTIC_ADDRESS: post-analytics
     healthcheck:
@@ -22,7 +22,7 @@ services:
     container_name: post-analytics
     image: ${NODE_IMAGE}
     env_file:
-      - ../env.ini
+      - ../.env
     environment:
       POSTANALYTIC_ONLY: true
     healthcheck:
