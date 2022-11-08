@@ -3,7 +3,7 @@
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
 
--include env.ini
+-include .env
 
 DOCKERFILE := ./Dockerfile
 REGISTRY   := docker.io/wallarm
