@@ -105,6 +105,10 @@ sync_node() {
 }
 
 configure_nginx() {
+  if [ -n "$NGINX_EXTERNAL_CONFIG" ]; then
+     return 0
+  fi
+
   if [ x"${WALLARM_NGINX_LOG_TO_FILES}" != x"true" ]
   then
     ln -sf /dev/stdout /var/log/nginx/access.log
@@ -123,7 +127,7 @@ configure_nginx() {
       /etc/nginx/sites-enabled/default
   fi
 
-  if [ ! -z "$DISABLE_IPV6" ]; then
+  if [ -n "$DISABLE_IPV6" ]; then
     sed  -i '/ipv6only/d' /etc/nginx/sites-enabled/default
   fi
 
@@ -175,12 +179,14 @@ configure_services() {
     || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
   then
     rm /etc/cron.d/wallarm-node-nginx
+    rm /etc/collectd/wallarm-collectd.conf.d/nginx-wallarm.conf
     mv /etc/supervisor/supervisord.post-analytics.conf.example /etc/supervisor/supervisord.conf
     sed  -e 's/# post-analytic://' -i /etc/cron.d/wallarm-node-tarantool
   fi
 
   if [ -n "$POSTANALYTIC_ADDRESS" ]; then
     rm /etc/cron.d/wallarm-node-tarantool
+    rm /etc/collectd/wallarm-collectd.conf.d/wallarm-tarantool.conf
     mv /etc/supervisor/supervisord.filtering.conf.example /etc/supervisor/supervisord.conf
   fi
 }
@@ -218,7 +224,7 @@ fi
 
 printenv >> /etc/environment
 prepare_dirs
-#configure_services
+configure_services
 register_node
 sync_node
 configure_nginx

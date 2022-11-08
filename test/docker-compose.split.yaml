@@ -1,0 +1,48 @@
+version: '3.6'
+
+services:
+  node:
+    container_name: node
+    image: ${NODE_IMAGE}
+    env_file:
+      - ../env.ini
+    environment:
+      POSTANALYTIC_ADDRESS: post-analytics
+    healthcheck:
+      test: bash -c '[ -f /etc/wallarm/node.yaml ]'
+      timeout: 5s
+      retries: 10
+    volumes:
+      - "./nginx_conf/wallarm_node.conf:/etc/nginx/sites-enabled/default"
+    depends_on:
+    - post-analytics
+    - nginx
+
+  post-analytics:
+    container_name: post-analytics
+    image: ${NODE_IMAGE}
+    env_file:
+      - ../env.ini
+    environment:
+      POSTANALYTIC_ONLY: true
+    healthcheck:
+      test: bash -c '[ -f /etc/wallarm/node.yaml ]'
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    container_name: nginx
+    image: nginx:stable-alpine
+    volumes:
+      - "./nginx_conf/nginx_node.conf:/etc/nginx/conf.d/default.conf"
+
+  pytest:
+    container_name: pytest
+    image: dkr.wallarm.com/tests/smoke-tests:latest
+    env_file:
+      - ../env.ini
+    entrypoint: '/bin/sleep'
+    command:
+      - infinity
+
+
