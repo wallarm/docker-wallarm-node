@@ -10,12 +10,12 @@ REGISTRY   := docker.io/wallarm
 TAG   	   ?= test
 IMAGE 	   ?= $(REGISTRY)/node:$(TAG)
 
-PYTEST_WORKERS   ?= 10
-PYTEST_ARGS      ?= --allure-features=Node
+PYTEST_WORKERS ?= 10
+PYTEST_ARGS    ?= --allure-features=Node
 
-COMPOSE_CMD  = NODE_IMAGE=$(IMAGE) docker-compose -p $@ -f test/docker-compose.$@.yaml
-NODE_UUID    = $(COMPOSE_CMD) exec node cat /etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
-PYTEST_CMD   = $(COMPOSE_CMD) exec -e NODE_UUID=$$($(NODE_UUID)) pytest pytest -n $(PYTEST_WORKERS) $(PYTEST_ARGS)
+COMPOSE_CMD = NODE_IMAGE=$(IMAGE) docker-compose -p $@ -f test/docker-compose.$@.yaml
+NODE_UUID   = $(COMPOSE_CMD) exec node cat /etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
+PYTEST_CMD  = $(COMPOSE_CMD) exec -e NODE_UUID=$$($(NODE_UUID)) pytest pytest -n $(PYTEST_WORKERS) $(PYTEST_ARGS)
 
 ### Build routines
 ###
