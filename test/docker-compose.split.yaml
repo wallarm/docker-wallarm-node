@@ -40,7 +40,7 @@ services:
     container_name: pytest
     image: dkr.wallarm.com/tests/smoke-tests:latest
     env_file:
-      - ../env.ini
+      - ../.env
     entrypoint: '/bin/sleep'
     command:
       - infinity
