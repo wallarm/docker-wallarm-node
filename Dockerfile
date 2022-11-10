@@ -15,6 +15,8 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
         nginx \
         wallarm-node \
         libnginx-mod-http-wallarm \
+        libnginx-mod-http-lua \
+        lua-nginx-string \
         collectd-utils \
         curl \
         iptables \
