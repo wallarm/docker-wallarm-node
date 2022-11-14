@@ -7,7 +7,7 @@ while ! [ -s /etc/wallarm/node.yaml ]; do
   if $cmd; then
     break
   else
-    echo "Wait before next addnode attempt..."
+    echo "Wait before next register_node attempt..."
     sleep 5
   fi
 done

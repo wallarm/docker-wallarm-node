@@ -15,18 +15,22 @@ RUN printf -- "mQINBGIMrcABEAC6Eiq7wvDFie+y6P8e8rRxXlmpOh7FP4NwyR+XAoANbztuZMZO2
         nginx \
         wallarm-node \
         libnginx-mod-http-wallarm \
+        libnginx-mod-http-lua \
+        lua-nginx-string \
         collectd-utils \
         curl \
         iptables \
         bsdmainutils \
         sudo \
+        socat \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && chown -R wallarm:wallarm /var/lib/wallarm-tarantool
+    && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \
+    && sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/cron
 
 RUN cp /usr/share/doc/libnginx-mod-http-wallarm/examples/wallarm-status.conf /etc/nginx/conf.d/
 COPY scripts/init /usr/local/bin/
-COPY scripts/addnode_loop /usr/local/bin/
+COPY scripts/registernode_loop /usr/local/bin/
 
 COPY conf/supervisord.conf /etc/supervisor/
 COPY conf/supervisord.filtering.conf /etc/supervisor/supervisord.filtering.conf.example
