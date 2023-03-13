@@ -69,20 +69,6 @@ register_node() {
     /usr/share/wallarm-common/register-node \
       $args \
         --uuid "$NODE_UUID"
-  elif [ -n "$NODE_UUID" ] \
-    && [ -n "$NODE_SECRET" ]
-  then
-    /usr/share/wallarm-common/addnode \
-      $args \
-      --uuid "$NODE_UUID" \
-      --secret "$NODE_SECRET"
-  elif [ -n "$DEPLOY_USER" ] \
-    && [ -n "$DEPLOY_PASSWORD" ]
-  then
-    /usr/share/wallarm-common/addnode \
-      $args \
-      --username "$DEPLOY_USER" \
-      --password "$DEPLOY_PASSWORD"
   else
     /usr/share/wallarm-common/register-node \
       $args
@@ -214,9 +200,9 @@ if [ -n "$POSTANALYTIC_ADDRESS" ] && [ -n "$POSTANALYTIC_ONLY" ]; then
   exit 1
 fi
 
-if ([ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_PASSWORD" ]) && [ -z "$WALLARM_API_TOKEN" ]; then
+if [ -z "$WALLARM_API_TOKEN" ]; then
   if [ ! -f "/etc/wallarm/private.key" ]; then
-    echo "ERROR: no DEPLOY_USER, DEPLOY_PASSWORD or WALLARM_API_TOKEN and no private key in /etc/wallarm/private.key" >&2
+    echo "ERROR: no WALLARM_API_TOKEN and no private key in /etc/wallarm/private.key" >&2
     exit 1
   fi
 fi
