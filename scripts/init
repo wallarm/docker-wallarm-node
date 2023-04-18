@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 prepare_dirs() {
   LOGDIR=/var/log/wallarm
@@ -211,7 +211,8 @@ fi
 printenv >> /etc/environment
 prepare_dirs
 configure_services
-register_node
+#taken from https://unix.stackexchange.com/a/71511
+{ register_node |& tee /dev/fd/3 | grep -q 'Label "group" is required for this registration type' && exit; } 3>&1
 sync_node
 configure_nginx
 
