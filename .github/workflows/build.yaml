@@ -3,7 +3,7 @@ name: Build release
 on:
   push:
     tags:
-      - '\d{1,2}.\d{1,2}.\d{1,2}-\d{1}$'
+      - '[0-9]+.[0-9]+.[0-9]+\-[0-9]+'
 
 permissions:
   contents: read
