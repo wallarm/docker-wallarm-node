@@ -5,10 +5,11 @@ SHELL=/bin/bash -o pipefail -o errexit
 
 -include .env
 
-DOCKERFILE := ./Dockerfile
-REGISTRY   := docker.io/wallarm
-TAG   	   ?= test
-IMAGE 	   ?= $(REGISTRY)/node:$(TAG)
+DOCKERFILE   := ./Dockerfile
+REGISTRY     := docker.io/wallarm
+TAG   	     ?= test
+IMAGE 	     ?= $(REGISTRY)/node:$(TAG)
+IMAGE_LATEST := $(REGISTRY)/node:latest
 
 PYTEST_WORKERS ?= 10
 PYTEST_ARGS    ?= --allure-features=Node
@@ -25,10 +26,14 @@ build:
 push rmi:
 	@docker $@ $(IMAGE)
 
+push-latest:
+	@docker tag $(IMAGE) $(IMAGE_LATEST)
+	@dockr push $(IMAGE_LATEST)
+
 dive:
 	@dive $(CONTROLLER_IMAGE)
 
-.PHONY: build push rmi dive
+.PHONY: build push push-latest rmi dive
 
 ### Smoke tests routines
 ###
