@@ -57,7 +57,7 @@ jobs:
 
       - name: Push latest
         if: steps.check_release.outputs.type == 'production'
-        run: echo "push latest"
+        run: make push-latest
 
   sign:
     name: Sign images
