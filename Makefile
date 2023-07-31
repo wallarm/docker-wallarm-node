@@ -11,6 +11,13 @@ TAG   	     ?= test
 IMAGE 	     ?= $(REGISTRY)/node:$(TAG)
 IMAGE_LATEST := $(REGISTRY)/node:latest
 
+### Variables required to run test
+WALLARM_API_HOST      ?= api.wallarm.com
+WALLARM_API_CA_VERIFY ?= True
+NODE_BASE_URL         ?= http://node
+HOSTNAME_OLD_NODE     ?= smoke-tests-old-node
+CLIENT_ID             ?= 4
+
 PYTEST_WORKERS ?= 10
 PYTEST_ARGS    ?= --allure-features=Node
 
