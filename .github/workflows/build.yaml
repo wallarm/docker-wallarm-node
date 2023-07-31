@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.0.2
 
       - name: Import secrets
-        uses: hashicorp/vault-action@bb61006b6d1c5679dffb813f9f5c2466a7ddfdb0 # v2.6.0
+        uses: hashicorp/vault-action@cb841f2c86fb6d07cff94fda240828c1abc5ba43 # v2.7.3
         id: secrets
         with:
           exportEnv: false
@@ -67,7 +67,7 @@ jobs:
     if: needs.build.outputs.release_type == 'production'
     steps:
       - name: Import secrets
-        uses: hashicorp/vault-action@bb61006b6d1c5679dffb813f9f5c2466a7ddfdb0 # v2.6.0
+        uses: hashicorp/vault-action@cb841f2c86fb6d07cff94fda240828c1abc5ba43 # v2.7.3
         id: secrets
         with:
           exportEnv: false
