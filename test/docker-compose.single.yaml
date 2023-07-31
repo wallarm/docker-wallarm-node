@@ -3,8 +3,10 @@ version: '3.6'
 services:
   node:
     image: ${NODE_IMAGE}
-    env_file:
-      - ../.env
+    environment:
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
     healthcheck:
       test: bash -c '[ -f /etc/wallarm/node.yaml ]'
       timeout: 5s
@@ -21,8 +23,16 @@ services:
 
   pytest:
     image: dkr.wallarm.com/tests/smoke-tests:latest
-    env_file:
-      - ../.env
+    environment:
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      CLIENT_ID: ${CLIENT_ID}
+      USER_UUID: ${USER_UUID}
+      USER_SECRET: ${USER_SECRET}
+      PYTEST_WORKERS: ${PYTEST_WORKERS}
+      PYTEST_ARGS: ${PYTEST_ARGS}
+      NODE_BASE_URL: http://node
+      HOSTNAME_OLD_NODE: smoke-tests-old-node
     entrypoint: '/bin/sleep'
     command:
       - infinity
