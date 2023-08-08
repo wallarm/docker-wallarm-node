@@ -11,8 +11,36 @@ permissions:
 
 jobs:
   build:
-    name: Build and test
+    name: Build
+    runs-on: self-hosted-1cpu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.0.2
+
+      - name: Build image
+        run: make build
+
+      - name: Save image
+        run: docker save -o node.tar docker.io/wallarm/node:test
+
+      - name: Cache image
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
+        with:
+          retention-days: 1
+          name: node.tar
+          path: node.tar
+
+  test:
+    name: Test
     runs-on: self-hosted-2cpu
+    needs:
+      - build
+    strategy:
+      matrix:
+        case:
+          - single
+          - split
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.0.2
@@ -40,12 +68,17 @@ jobs:
           username: ${{ steps.secrets.outputs.token_name }}
           password: ${{ steps.secrets.outputs.token_secret }}
 
-      - name: Build image
-        run: make build
+      - name: Load cache
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
+        with:
+          name: node.tar
 
-      - name: Run tests
+      - name: Load images
+        run: docker load -i node.tar
+
+      - name: Run test
         env:
           USER_UUID: ${{ steps.secrets.outputs.user_uuid }}
           USER_SECRET: ${{ steps.secrets.outputs.user_secret }}
           WALLARM_API_TOKEN: ${{ steps.secrets.outputs.api_token }}
-        run: make smoke-test
+        run: make ${{ matrix.case }}

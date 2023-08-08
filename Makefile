@@ -46,7 +46,7 @@ dive:
 smoke-test: single split
 
 single split:
-	$(COMPOSE_CMD) up -d --wait
+	$(COMPOSE_CMD) up -d --wait --quiet-pull
 	$(PYTEST_CMD)
 	$(COMPOSE_CMD) down
 
