@@ -33,7 +33,7 @@ push rmi:
 
 push-latest:
 	@docker tag $(IMAGE) $(IMAGE_LATEST)
-	@dockr push $(IMAGE_LATEST)
+	@docker push $(IMAGE_LATEST)
 
 dive:
 	@dive $(CONTROLLER_IMAGE)
