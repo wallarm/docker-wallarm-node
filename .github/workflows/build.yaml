@@ -19,7 +19,7 @@ jobs:
       TAG: ${{ github.ref_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.0.2
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.0.2
 
       - name: Import secrets
         uses: hashicorp/vault-action@bb61006b6d1c5679dffb813f9f5c2466a7ddfdb0 # v2.6.0
