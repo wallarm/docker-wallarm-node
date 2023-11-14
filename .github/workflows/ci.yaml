@@ -15,7 +15,7 @@ jobs:
     runs-on: self-hosted-1cpu
     steps:
       - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v3.0.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v3.0.2
 
       - name: Build image
         run: make build
@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v3.0.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v3.0.2
 
       - name: Import secrets
         uses: hashicorp/vault-action@cb841f2c86fb6d07cff94fda240828c1abc5ba43 # v2.7.3
