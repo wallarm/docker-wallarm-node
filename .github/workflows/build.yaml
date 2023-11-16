@@ -16,7 +16,7 @@ jobs:
     outputs:
       release_type: ${{ steps.check_release.outputs.type }}
     env:
-      TAG: ${{ github.ref_name }}
+      CONTAINER_VERSION: ${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v3.0.2
@@ -44,17 +44,14 @@ jobs:
         id: check_release
         run: |
           TYPE="production"
-          if [[ ${TAG} =~ "rc" ]]; then
+          if [[ ${CONTAINER_VERSION} =~ "rc" ]]; then
             TYPE="release-candidate"
           fi
           echo "Release type: ${TYPE}"
           echo "type=${TYPE}" >> $GITHUB_OUTPUT
 
-      - name: Build
-        run: make build
-
-      - name: Push
-        run: make push
+      - name: Build and push
+        run: make BUILDX_ARGS=--push build
 
       - name: Push latest
         if: steps.check_release.outputs.type == 'production'
@@ -105,7 +102,7 @@ jobs:
           syft -o spdx-json ${IMAGE_NAME} > ${SBOM_SPDX}
           cosign attach sbom --sbom ${SBOM_SPDX} ${IMAGE_DIGEST}
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE_URI}.sbom"
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${IMAGE_DIGEST}
+          cosign sign --recursive --yes --key env://COSIGN_PRIVATE_KEY ${IMAGE_DIGEST}
           
           echo "sbom=${SBOM_SPDX}" >> $GITHUB_OUTPUT
           

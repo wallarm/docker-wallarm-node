@@ -1,3 +1,4 @@
+.EXPORT_ALL_VARIABLES:
 # https://makefiletutorial.com/
 
 # set default shell
@@ -5,35 +6,59 @@ SHELL=/bin/bash -o pipefail -o errexit
 
 -include .env
 
-DOCKERFILE   := ./Dockerfile
+AIO_VERSION       ?= 4.8.4
+CONTAINER_VERSION ?= test
+ALPINE_VERSION    = 3.18
+NGINX_VERSION     = 1.25.3
+WLRM_FOLDER       = mainline-$(shell echo ${NGINX_VERSION} | sed 's/\.//g')
+
 REGISTRY     := docker.io/wallarm
-TAG   	     ?= test
-IMAGE 	     ?= $(REGISTRY)/node:$(TAG)
+IMAGE 	     ?= $(REGISTRY)/node:$(CONTAINER_VERSION)
 IMAGE_LATEST := $(REGISTRY)/node:latest
 
 COMPOSE_CMD = NODE_IMAGE=$(IMAGE) docker-compose -p $@ -f test/docker-compose.$@.yaml
-NODE_UUID   = $(COMPOSE_CMD) exec node cat /etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
+NODE_UUID   = $(COMPOSE_CMD) exec node cat /opt/wallarm/etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
 PYTEST_CMD  = $(COMPOSE_CMD) exec -e NODE_UUID=$$($(NODE_UUID)) pytest pytest -n $(PYTEST_WORKERS) $(PYTEST_ARGS)
 
 ### Variables required to run test
 .EXPORT_ALL_VARIABLES:
 WALLARM_API_HOST      ?= api.wallarm.com
 WALLARM_API_CA_VERIFY ?= True
-CLIENT_ID             ?= 4
+CLIENT_ID             ?= 5
 PYTEST_WORKERS        ?= 10
 PYTEST_ARGS           ?= --allure-features=Node
 
+# Single-platform for local, multi-platform for CI
+ifndef CI
+	PLATFORMS?=amd64
+	ARCHS?=x86_64
+	BUILDX_ARGS?=--load
+else
+	PLATFORMS?=amd64,aarch64
+	ARCHS?=x86_64 aarch64
+	BUILDX_ARGS?=--push
+endif
+
 ### Build routines
 ###
-build:
-	@docker build -t $(IMAGE) . --force-rm --no-cache --progress=plain
+.PHONY: build
+build: setup_buildx
+	$(foreach ARCH,$(ARCHS), ARCH=$(ARCH) build-scripts/get_dependencies.sh && ARCH=$(ARCH) build-scripts/apply_fixes.sh ;)
+	docker buildx build --platform $(PLATFORMS) -f Dockerfile --build-arg ALPINE_VERSION="$(ALPINE_VERSION)" --build-arg NGINX_VERSION="$(NGINX_VERSION)" --build-arg AIO_VERSION="$(AIO_VERSION)" --build-arg WLRM_FOLDER="$(WLRM_FOLDER)" -t $(IMAGE) $(BUILDX_ARGS) .
 
-push rmi:
-	@docker $@ $(IMAGE)
+setup_buildx:
+	docker buildx rm multi-arch || true
+	docker buildx create \
+		--name multi-arch \
+		--platform linux/amd64,linux/arm64 \
+		--driver docker-container \
+		--use
+
+rmi:
+	@docker rmi $(IMAGE)
 
 push-latest:
-	@docker tag $(IMAGE) $(IMAGE_LATEST)
-	@docker push $(IMAGE_LATEST)
+	docker buildx imagetools create -t $(IMAGE_LATEST) $(IMAGE)
 
 dive:
 	@dive $(CONTROLLER_IMAGE)

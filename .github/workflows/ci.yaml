@@ -12,34 +12,48 @@ permissions:
 jobs:
   build:
     name: Build
-    runs-on: self-hosted-amd64-1cpu
+    runs-on: ${{ matrix.RUNNER }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - PLATFORM: amd64
+            ARCH: x86_64
+            RUNNER: self-hosted-amd64-1cpu
+          - PLATFORM: arm64
+            ARCH: aarch64
+            RUNNER: self-hosted-arm64-1cpu
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v3.0.2
 
       - name: Build image
-        run: make build
+        run: make ARCHS=${{ matrix.ARCH }} PLATFORMS=${{ matrix.PLATFORM }} BUILDX_ARGS=--load build
 
       - name: Save image
-        run: docker save -o node.tar docker.io/wallarm/node:test
+        run: docker save -o node-${{ matrix.ARCH }}.tar docker.io/wallarm/node:test
 
       - name: Cache image
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
         with:
           retention-days: 1
-          name: node.tar
-          path: node.tar
+          name: node-${{ matrix.ARCH }}.tar
+          path: node-${{ matrix.ARCH }}.tar
 
   test:
     name: Test
-    runs-on: self-hosted-amd64-2cpu
+    runs-on: ${{ matrix.RUNNER }}
     needs:
       - build
     strategy:
       matrix:
-        case:
-          - single
-          - split
+        case: [single, split]
+        ARCH: [x86_64, aarch64]
+        include:
+          - ARCH: x86_64
+            RUNNER: self-hosted-amd64-2cpu
+          - ARCH: aarch64
+            RUNNER: self-hosted-arm64-2cpu
       fail-fast: false
     steps:
       - name: Checkout
@@ -72,10 +86,10 @@ jobs:
       - name: Load cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
         with:
-          name: node.tar
+          name: node-${{ matrix.ARCH }}.tar
 
       - name: Load images
-        run: docker load -i node.tar
+        run: docker load -i node-${{ matrix.ARCH }}.tar
 
       - name: Run test
         env:

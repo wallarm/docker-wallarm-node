@@ -1,0 +1,54 @@
+#
+# by default, proxy all to 127.0.0.1:8080
+#
+
+server {
+        {{ if env.Getenv "NGINX_PORT" -}}
+                {{ $nginxListenPort = .Env.NGINX_PORT "80" -}}
+        {{ end -}}
+        listen {{ print $nginxListenPort }} default_server;
+        {{ if not (env.Getenv "DISABLE_IPV6") -}}
+        listen [::]:{{ print $nginxListenPort }} default_server ipv6only=on;
+        {{ end -}}
+        #listen 443 ssl;
+
+        server_name localhost;
+
+        #ssl_certificate cert.pem;
+        #ssl_certificate_key cert.key;
+
+        root /usr/share/nginx/html;
+
+        index index.html index.htm;
+
+        {{ if env.Getenv "WALLARM_MODE" -}}
+                {{ $wallarmMode = .Env.WALLARM_MODE "monitoring" -}}
+        {{ end -}}
+        wallarm_mode {{ print $wallarmMode }};
+        {{ if env.Getenv "WALLARM_APPLICATION" -}}
+        wallarm_application {{ .Env.WALLARM_APPLICATION }};
+        {{ end }}
+        {{ if env.Getenv "WALLARM_STATUS_ALLOW" -}}
+
+        location /wallarm-status {
+               {{range (.Env.WALLARM_STATUS_ALLOW | strings.Split ",") -}}
+               allow {{ . }};
+               {{ end -}}
+               deny all;
+               wallarm_status on;
+               wallarm_mode off;
+        }
+        {{ end }}
+
+        location / {
+                {{ if env.Getenv "NGINX_BACKEND" -}}
+                        {{ if or (.Env.NGINX_BACKEND | strings.HasPrefix "http") (.Env.NGINX_BACKEND | strings.HasPrefix "https") -}}
+                                {{ $nginxBackend = .Env.NGINX_BACKEND -}}
+                        {{ else -}}
+                                {{ $nginxBackend = (print "http://" .Env.NGINX_BACKEND) -}}
+                        {{ end -}}
+                {{ end -}}
+                proxy_pass {{ print $nginxBackend "http://127.0.0.1:8080" }};
+                include proxy_params;
+        }
+}
