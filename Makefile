@@ -16,9 +16,17 @@ REGISTRY     := docker.io/wallarm
 IMAGE 	     ?= $(REGISTRY)/node:$(CONTAINER_VERSION)
 IMAGE_LATEST := $(REGISTRY)/node:latest
 
+RAND_NUM := $(shell echo $$RANDOM$$RANDOM$$RANDOM | cut -c 1-10)
 COMPOSE_CMD = NODE_IMAGE=$(IMAGE) docker-compose -p $@ -f test/docker-compose.$@.yaml
-NODE_UUID   = $(COMPOSE_CMD) exec node cat /opt/wallarm/etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
-PYTEST_CMD  = $(COMPOSE_CMD) exec -e NODE_UUID=$$($(NODE_UUID)) pytest pytest -n $(PYTEST_WORKERS) $(PYTEST_ARGS)
+NODE_UUID_CMD = $(COMPOSE_CMD) exec node cat /opt/wallarm/etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
+NODE_UUID = $(shell $(NODE_UUID_CMD))
+GITHUB_VARS_CMD = env | awk -F '=' '/^GITHUB_/ {print "-e " $$1 "=" $$2}'
+GITHUB_VARS = $(shell $(GITHUB_VARS_CMD))
+RUN_TESTS := $(shell [ "$$ALLURE_UPLOAD_REPORT" = "true" ] && \
+                     echo "pytest allurectl watch --job-uid $(RAND_NUM) -- pytest" || \
+                     echo "pytest pytest")
+PYTEST_CMD = $(COMPOSE_CMD) exec $(GITHUB_VARS) -e NODE_UUID=$$($(NODE_UUID_CMD)) \
+             $(RUN_TESTS) -n $(PYTEST_WORKERS) $(PYTEST_ARGS)
 
 ### Variables required to run test
 .EXPORT_ALL_VARIABLES:
