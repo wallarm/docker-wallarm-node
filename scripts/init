@@ -76,7 +76,14 @@ sync_node() {
 }
 
 configure_nginx() {
-  gomplate -f /opt/wallarm/wallarm-status.conf.tmpl > /etc/nginx/conf.d/wallarm-status.conf
+  read -r NGX_CONF_FIRST < /etc/nginx/nginx.conf
+  if [ "$NGX_CONF_FIRST" = "### Wallarm default ###" ] \
+    || [ -n "$RENDER_STATUS_PAGE" ]; then
+    echo "Rendering status page..."
+    gomplate -f /opt/wallarm/wallarm-status.conf.tmpl > /etc/nginx/conf.d/wallarm-status.conf
+  else
+    echo "Custom nginx.conf (probably mounted dir), please handle status page manually"
+  fi
 
   if [ -n "$NGINX_EXTERNAL_CONFIG" ]; then
      return 0
@@ -90,7 +97,7 @@ configure_nginx() {
 
   [ -n "$NGINX_BACKEND" ] || return 0
 
-  echo "Rendering nginx configs..."
+  echo "Rendering nginx default config..."
   gomplate -f /opt/wallarm/default.conf.tmpl > /etc/nginx/sites-enabled/default
 
   if [ ! -z "$NGINX_PORT" ]; then
