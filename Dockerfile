@@ -17,8 +17,7 @@ RUN addgroup -S wallarm && \
 # install wallarm
 ARG WLRM_FOLDER
 ARG TARGETPLATFORM
-COPY --chown=wallarm:wallarm build/$TARGETPLATFORM/opt /opt
-COPY build/$TARGETPLATFORM/opt/wallarm/modules/${WLRM_FOLDER} /usr/lib/nginx/modules
+COPY --chown=wallarm:wallarm build/$TARGETPLATFORM/ /
 
 # build-time compat check
 COPY build-scripts/check_sig.sh /opt/wallarm/check_sig.sh

@@ -69,7 +69,7 @@ push-latest:
 	docker buildx imagetools create -t $(IMAGE_LATEST) $(IMAGE)
 
 dive:
-	@dive $(CONTROLLER_IMAGE)
+	@dive $(IMAGE)
 
 .PHONY: build push push-latest rmi dive
 

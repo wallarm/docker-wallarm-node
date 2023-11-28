@@ -5,7 +5,7 @@ set -e
 ARCH=${ARCH:-x86_64}
 DOCKER_ARCH=${DOCKER_ARCH:-amd64}
 
-if [ $ARCH == "aarch64" ]; then
+if [ "$ARCH" == "aarch64" ]; then
     DOCKER_ARCH="arm64"
 fi
 
