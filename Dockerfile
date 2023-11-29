@@ -1,6 +1,9 @@
 ARG ALPINE_VERSION
+
+FROM alpine:${ALPINE_VERSION}
+
+ARG ALPINE_VERSION
 ARG NGINX_VERSION
-FROM nginx:${NGINX_VERSION}-alpine${ALPINE_VERSION}
 
 MAINTAINER Wallarm Support Team <support@wallarm.com>
 LABEL NGINX_VERSION=${NGINX_VERSION}
@@ -11,7 +14,10 @@ RUN addgroup -S wallarm && \
     adduser -S -D -G wallarm -h /opt/wallarm wallarm && \
     apk update && \
     apk upgrade && \
-    apk add bash socat logrotate libgcc gomplate && \
+    apk add curl bash socat logrotate libgcc gomplate && \
+    curl -o /etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub && \
+    apk add -X "https://nginx.org/packages/mainline/alpine/v${ALPINE_VERSION}/main" --no-cache "nginx=~${NGINX_VERSION}" && \
+    nginx -v && \
     rm -r /var/cache/apk/*
 
 # install wallarm
