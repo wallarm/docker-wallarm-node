@@ -16,7 +16,7 @@ RUN addgroup -S wallarm && \
     apk upgrade && \
     apk add curl bash socat logrotate libgcc gomplate && \
     curl -o /etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub && \
-    apk add -X "https://nginx.org/packages/mainline/alpine/v${ALPINE_VERSION}/main" --no-cache "nginx=~${NGINX_VERSION}" && \
+    apk add -X "https://nginx.org/packages/mainline/alpine/v${ALPINE_VERSION}/main" "nginx=~${NGINX_VERSION}" "nginx-module-geoip=~${NGINX_VERSION}" "nginx-module-image-filter=~${NGINX_VERSION}" "nginx-module-perl=~${NGINX_VERSION}" "nginx-module-xslt=~${NGINX_VERSION}" && \
     nginx -v && \
     rm -r /var/cache/apk/*
 
@@ -34,9 +34,10 @@ COPY scripts/init /usr/local/bin/
 
 # configs
 RUN /bin/bash -c \
-    'mkdir -p /etc/nginx/{modules-available,modules-enabled,sites-available,sites-enabled} && \
+    'mkdir -p /etc/nginx/{modules-available,sites-available,sites-enabled} && \
+    ln -sf /etc/nginx/modules/ /etc/nginx/modules-enabled && \
     ln -sf /etc/nginx/modules-available/mod-http-wallarm.conf /etc/nginx/modules-enabled/ && \
-    rm /etc/nginx/conf.d/default.conf && \
+    rm /etc/nginx/conf.d/{default,stream}.conf || true && \
     touch /etc/environment && \
     chown -R wallarm:wallarm /run /etc/environment /etc/nginx /var/log/nginx /var/cache/nginx'
 COPY conf/nginx /etc/nginx/
