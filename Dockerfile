@@ -4,17 +4,25 @@ FROM alpine:${ALPINE_VERSION}
 
 ARG ALPINE_VERSION
 ARG NGINX_VERSION
+ARG GOMPLATE_VERISON
 
 MAINTAINER Wallarm Support Team <support@wallarm.com>
-LABEL NGINX_VERSION=${NGINX_VERSION}
-LABEL AIO_VERSION=${AIO_VERSION}
+
+LABEL org.opencontainers.image.title="Docker official image for Wallarm Node. API security platform agent"
+LABEL org.opencontainers.image.documentation="https://docs.wallarm.com/installation/inline/compute-instances/docker/nginx-based"
+LABEL org.opencontainers.image.source="https://github.com/wallarm/docker-wallarm-node"
+LABEL org.opencontainers.image.vendor="Wallarm"
+LABEL org.opencontainers.image.version="${AIO_VERSION}"
+LABEL org.opencontainers.image.revision="${CONTAINER_VERSION}"
+LABEL com.wallarm.docker.versions.alpine-version="${ALPINE_VERSION}"
+LABEL com.wallarm.docker.versions.nginx-version="${NGINX_VERSION}"
 
 # core deps
 RUN addgroup -S wallarm && \
     adduser -S -D -G wallarm -h /opt/wallarm wallarm && \
     apk update && \
     apk upgrade && \
-    apk add curl bash socat logrotate libgcc gomplate && \
+    apk add curl bash socat logrotate libgcc "gomplate=~${GOMPLATE_VERISON}" && \
     curl -o /etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub && \
     apk add -X "https://nginx.org/packages/mainline/alpine/v${ALPINE_VERSION}/main" "nginx=~${NGINX_VERSION}" "nginx-module-geoip=~${NGINX_VERSION}" "nginx-module-image-filter=~${NGINX_VERSION}" "nginx-module-perl=~${NGINX_VERSION}" "nginx-module-xslt=~${NGINX_VERSION}" && \
     nginx -v && \

@@ -10,9 +10,9 @@ fi
 
 BUILD_DIR="build/linux/${DOCKER_ARCH}"
 
-sed -i \
-    -e '/WALLARM_COMPONENT_NAME/d' \
-    -e '/WALLARM_COMPONENT_VERSION/d' \
+sed -i -E \
+    -e '/WALLARM_COMPONENT_NAME/s/(.*)=(.*)/\1=wallarm_nginx_docker/' \
+    -e "/WALLARM_COMPONENT_VERSION/s/(.*)=(.*)/\1=$AIO_VERSION/" \
     -e '/SLAB_ALLOC_ARENA/d' \
     "$BUILD_DIR/opt/wallarm/env.list"
 

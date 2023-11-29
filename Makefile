@@ -11,6 +11,7 @@ CONTAINER_VERSION ?= test
 ALPINE_VERSION    = 3.18
 NGINX_VERSION     = 1.25.3
 WLRM_FOLDER       = mainline-$(shell echo ${NGINX_VERSION} | sed 's/\.//g')
+GOMPLATE_VERISON  = 3.11.5
 
 REGISTRY     := docker.io/wallarm
 IMAGE 	     ?= $(REGISTRY)/node:$(CONTAINER_VERSION)
@@ -52,7 +53,7 @@ endif
 .PHONY: build
 build: setup_buildx
 	$(foreach ARCH,$(ARCHS), ARCH=$(ARCH) build-scripts/get_dependencies.sh && ARCH=$(ARCH) build-scripts/apply_fixes.sh ;)
-	docker buildx build --platform $(PLATFORMS) -f Dockerfile --build-arg ALPINE_VERSION="$(ALPINE_VERSION)" --build-arg NGINX_VERSION="$(NGINX_VERSION)" --build-arg AIO_VERSION="$(AIO_VERSION)" --build-arg WLRM_FOLDER="$(WLRM_FOLDER)" -t $(IMAGE) $(BUILDX_ARGS) .
+	docker buildx build --platform $(PLATFORMS) -f Dockerfile --build-arg CONTAINER_VERSION="$(CONTAINER_VERSION)" --build-arg GOMPLATE_VERISON="$(GOMPLATE_VERISON)" --build-arg ALPINE_VERSION="$(ALPINE_VERSION)" --build-arg NGINX_VERSION="$(NGINX_VERSION)" --build-arg AIO_VERSION="$(AIO_VERSION)" --build-arg WLRM_FOLDER="$(WLRM_FOLDER)" -t $(IMAGE) $(BUILDX_ARGS) .
 
 setup_buildx:
 	docker buildx rm multi-arch || true
