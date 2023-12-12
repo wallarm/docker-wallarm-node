@@ -8,23 +8,18 @@ services:
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
     healthcheck:
-      test: bash -c '[ -f /etc/wallarm/node.yaml ]'
+      test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
       retries: 10
     volumes:
       - "./nginx_conf/wallarm_node.conf:/etc/nginx/sites-enabled/default"
-    depends_on:
-      - nginx
-
-  nginx:
-    image: nginx:stable-alpine
-    volumes:
-      - "./nginx_conf/nginx_node.conf:/etc/nginx/conf.d/default.conf"
+      - "./nginx_conf/nginx_node.conf:/etc/nginx/sites-enabled/workload.conf"
 
   pytest:
     image: dkr.wallarm.com/tests/smoke-tests:latest
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_PRESET: ${WALLARM_API_PRESET:-eu1}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
       CLIENT_ID: ${CLIENT_ID}
       USER_UUID: ${USER_UUID}
@@ -33,6 +28,18 @@ services:
       PYTEST_ARGS: ${PYTEST_ARGS}
       NODE_BASE_URL: http://node
       HOSTNAME_OLD_NODE: smoke-tests-old-node
+      ALLURE_ENVIRONMENT_ARCH: ${ALLURE_ENVIRONMENT_ARCH}
+      ALLURE_PROJECT_ID: ${ALLURE_PROJECT_ID}
+      ALLURE_TOKEN: ${ALLURE_TOKEN}
+      ALLURE_ENDPOINT: ${ALLURE_ENDPOINT}
+      ALLURE_RESULTS: ${ALLURE_RESULTS:-/tests/_out/allure_report}
+      ALLURE_LAUNCH_TAGS: USER:${GITHUB_ACTOR:-local}, 
+          WORKFLOW:${GITHUB_WORKFLOW:-local},
+          RUN_ID:${GITHUB_RUN_ID:-local},
+          BRANCH:${GITHUB_REF_NAME:-local},
+          JOB:${GITHUB_JOB:-local},
+          ARCH:${ALLURE_ENVIRONMENT_ARCH:-}
+      ALLURE_LAUNCH_NAME: ${GITHUB_WORKFLOW:-local}-${GITHUB_RUN_ID:-local}-${GITHUB_JOB:-local}-${ALLURE_ENVIRONMENT_ARCH:-}
     entrypoint: '/bin/sleep'
     command:
       - infinity
