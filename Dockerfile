@@ -64,6 +64,12 @@ RUN /bin/bash -c \
 COPY conf/nginx /etc/nginx/
 COPY conf/nginx_templates /opt/wallarm/
 
+RUN apk add --no-cache libcap && \
+    setcap    cap_net_bind_service=+ep /opt/wallarm/usr/bin/tarantool && \
+    setcap -v cap_net_bind_service=+ep /opt/wallarm/usr/bin/tarantool && \
+    setcap    cap_net_bind_service=+ep /usr/sbin/nginx && \
+    setcap -v cap_net_bind_service=+ep /usr/sbin/nginx
+
 EXPOSE 80 443
 USER wallarm
 
