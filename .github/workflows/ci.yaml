@@ -70,7 +70,7 @@ jobs:
           password: ${{ steps.secrets.outputs.token_secret }}
 
       - name: Load cache
-        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935
         with:
           name: node.tar
 
