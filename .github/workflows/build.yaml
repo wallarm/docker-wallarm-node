@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   build:
@@ -16,7 +17,7 @@ jobs:
     outputs:
       release_type: ${{ steps.check_release.outputs.type }}
     env:
-      TAG: ${{ github.ref_name }}
+      CONTAINER_VERSION: ${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v3.0.2
@@ -44,17 +45,14 @@ jobs:
         id: check_release
         run: |
           TYPE="production"
-          if [[ ${TAG} =~ "rc" ]]; then
+          if [[ ${CONTAINER_VERSION} =~ "rc" ]]; then
             TYPE="release-candidate"
           fi
           echo "Release type: ${TYPE}"
           echo "type=${TYPE}" >> $GITHUB_OUTPUT
 
-      - name: Build
-        run: make build
-
-      - name: Push
-        run: make push
+      - name: Build and push
+        run: make BUILDX_ARGS=--push build
 
       - name: Push latest
         if: steps.check_release.outputs.type == 'production'
@@ -105,7 +103,7 @@ jobs:
           syft -o spdx-json ${IMAGE_NAME} > ${SBOM_SPDX}
           cosign attach sbom --sbom ${SBOM_SPDX} ${IMAGE_DIGEST}
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE_URI}.sbom"
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${IMAGE_DIGEST}
+          cosign sign --recursive --yes --key env://COSIGN_PRIVATE_KEY ${IMAGE_DIGEST}
           
           echo "sbom=${SBOM_SPDX}" >> $GITHUB_OUTPUT
           
@@ -115,3 +113,94 @@ jobs:
           retention-days: 30
           name: ${{ steps.sign.outputs.sbom }}
           path: ${{ steps.sign.outputs.sbom }}
+
+  update_version:
+    name: Update package version
+    if: needs.build.outputs.release_type == 'production'
+    runs-on: self-hosted-amd64-1cpu
+    needs: build
+    steps:
+      - name: Import secrets
+        uses: hashicorp/vault-action@affa6f04da5c2d55e6e115b7d1b044a6b1af8c74 # v2.7.4
+        id: secrets
+        with:
+          exportEnv: true
+          url: ${{ secrets.VAULT_URL }}
+          role: ${{ secrets.VAULT_ROLE }}
+          method: kubernetes
+          path: kubernetes-ci
+          secrets: |
+            kv-gitlab-ci/data/github/shared/versions-repo-creds token_secret | GITLAB_TOKEN ;
+            kv-gitlab-ci/data/github/shared/versions-repo-creds token_secret | GITLAB_TOKEN_NAME ;
+            kv-gitlab-ci/data/github/shared/versions-repo-creds host | GITLAB_HOST ;
+            kv-gitlab-ci/data/github/shared/versions-repo-creds repo | GITLAB_REPO ;
+
+      - name: Update package version
+        env:
+          COMPONENT_NAME: wallarm-nginx-docker
+          COMPONENT_VERSION: ${{ github.ref_name }}
+        run: |
+          PR_BRANCH="update/${COMPONENT_NAME}/${COMPONENT_VERSION}"
+          COMMIT_MESSAGE="Bump ${COMPONENT_NAME} version to ${COMPONENT_VERSION}"
+          GITLAB_REPO_URL="https://${GITLAB_TOKEN_NAME}:${GITLAB_TOKEN}@${GITLAB_HOST}/${GITLAB_REPO}"
+
+          git clone ${GITLAB_REPO_URL}
+          cd packages_versions
+          git checkout -b ${PR_BRANCH}
+          git config --local user.name 'project_808_bot'
+          git config --local user.email 'project808_bot@noreply.${GITLAB_HOST}'
+
+          cd packages_versions
+          cat latest.json | jq -r '.body."'"$COMPONENT_NAME"'" += ["'"$COMPONENT_VERSION"'"]' > latest.new.json
+          mv latest.new.json latest.json
+          git add latest.json
+          git commit -m "${COMMIT_MESSAGE}"
+          git push ${GITLAB_REPO_URL} ${PR_BRANCH}
+
+          glab auth login --hostname ${GITLAB_HOST} --token ${GITLAB_TOKEN}
+
+          echo "Creating merge request ..."
+          glab mr create \
+            --fill \
+            --yes \
+            --label ${COMPONENT_NAME} \
+            --source-branch ${PR_BRANCH} \
+            --repo https://${GITLAB_HOST}/${GITLAB_REPO}
+
+          echo "Approving merge request ..."
+          glab mr approve \
+            ${PR_BRANCH} \
+            --repo https://${GITLAB_HOST}/${GITLAB_REPO}
+
+          # Sometimes merging is failed without delay
+          echo "Sleep ..."
+          sleep 20
+
+          echo "Merging ..."
+          glab mr merge \
+            ${PR_BRANCH} \
+            --yes \
+            --remove-source-branch \
+            --when-pipeline-succeeds=false \
+            --repo https://${GITLAB_HOST}/${GITLAB_REPO}
+
+  scan:
+    name: Vulnerability scanner
+    if: needs.build.outputs.release_type == 'production'
+    runs-on: self-hosted-amd64-1cpu
+    needs: build
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: docker.io/wallarm/node:${{ github.ref_name }}
+          severity: 'CRITICAL,HIGH'
+          scanners: vuln
+          format: sarif
+          output: trivy-results.sarif
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+          token: ${{ github.token }}
