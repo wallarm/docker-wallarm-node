@@ -172,9 +172,9 @@ if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
   || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
   || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
 then
-  exec /opt/wallarm/usr/bin/python3.8 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf
+  exec /opt/wallarm/usr/bin/python3.10 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf
 else
-  /opt/wallarm/usr/bin/python3.8 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf &
+  /opt/wallarm/usr/bin/python3.10 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf &
   sleep 1
   exec /usr/sbin/nginx -g "daemon off;"
 fi

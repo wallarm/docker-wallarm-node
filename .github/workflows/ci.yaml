@@ -110,7 +110,6 @@ jobs:
           ALLURE_PROJECT_ID: ${{ steps.secrets.outputs.ALLURE_PROJECT_ID }}
           ALLURE_ENVIRONMENT_ARCH: ${{ matrix.ARCH }}
           ALLURE_UPLOAD_REPORT: true
-          TEST_RC: 'True'
         run: make ${{ matrix.case }}
 
   scan:
