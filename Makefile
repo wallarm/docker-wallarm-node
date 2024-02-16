@@ -6,7 +6,7 @@ SHELL=/bin/bash -o pipefail -o errexit
 
 -include .env
 
-AIO_VERSION       ?= 4.10.0
+AIO_VERSION       ?= 4.10.1
 CONTAINER_VERSION ?= test
 ALPINE_VERSION    = 3.18
 NGINX_VERSION     = 1.24.0
@@ -19,6 +19,7 @@ IMAGE 	     ?= $(REGISTRY)/node:$(CONTAINER_VERSION)
 IMAGE_LATEST := $(REGISTRY)/node:latest
 
 RAND_NUM := $(shell echo $$RANDOM$$RANDOM$$RANDOM | cut -c 1-10)
+NODE_VERSION ?= $(shell echo $(AIO_VERSION) | awk -F'[-.]' '{print $$1"."$$2"."$$3}')
 COMPOSE_CMD = NODE_IMAGE=$(IMAGE) docker-compose -p $@ -f test/docker-compose.$@.yaml
 NODE_UUID_CMD = $(COMPOSE_CMD) exec node cat /opt/wallarm/etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
 NODE_UUID = $(shell $(NODE_UUID_CMD))
