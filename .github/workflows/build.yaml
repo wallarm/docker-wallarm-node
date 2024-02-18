@@ -186,21 +186,21 @@ jobs:
 
   scan:
     name: Vulnerability scanner
-    if: needs.build.outputs.release_type == 'production'
     runs-on: self-hosted-amd64-1cpu
     needs: build
     steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - name: Docker Scout
+        uses: docker/scout-action@v1
         with:
-          image-ref: docker.io/wallarm/node:${{ github.ref_name }}
-          severity: 'CRITICAL,HIGH'
-          scanners: vuln
-          format: sarif
-          output: trivy-results.sarif
+          command: cves
+          image: docker.io/wallarm/node:${{ github.ref_name }}
+          to: docker.io/wallarm/node:latest
+          only-severities: critical,high
+          sarif-file: sarif.output.json
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
+        if: needs.build.outputs.release_type == 'production'
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: sarif.output.json
           token: ${{ github.token }}
