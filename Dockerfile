@@ -30,7 +30,7 @@ RUN addgroup -S wallarm && \
     adduser -S -D -G wallarm -h /opt/wallarm wallarm && \
     apk update && \
     apk upgrade && \
-    apk add curl bash socat logrotate libgcc \
+    apk add curl bash socat logrotate libgcc binutils upx \
         nginx=~$NGINX_VERSION \
         nginx-mod-http-perl=~$NGINX_VERSION \
         nginx-mod-stream=~$NGINX_VERSION \
@@ -48,6 +48,7 @@ RUN addgroup -S wallarm && \
 RUN curl -sL https://github.com/hairyhenderson/gomplate/releases/download/v${GOMPLATE_VERISON}/gomplate_linux-${TARGETARCH} \
     -o /usr/local/bin/gomplate && \
     chmod 755 /usr/local/bin/gomplate && \
+    upx /usr/local/bin/gomplate && \
     gomplate -v
 
 # Create symlinks to redirect nginx logs to stdout and stderr
@@ -80,7 +81,7 @@ RUN apk add --no-cache libcap && \
     setcap -v cap_net_bind_service=+ep /opt/wallarm/usr/bin/tarantool && \
     setcap    cap_net_bind_service=+ep /usr/sbin/nginx && \
     setcap -v cap_net_bind_service=+ep /usr/sbin/nginx && \
-    apk del libcap
+    apk del libcap binutils curl upx
 
 EXPOSE 80 443
 USER wallarm
