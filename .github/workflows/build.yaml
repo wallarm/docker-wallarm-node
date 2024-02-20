@@ -186,21 +186,37 @@ jobs:
 
   scan:
     name: Vulnerability scanner
-    if: needs.build.outputs.release_type == 'production'
     runs-on: self-hosted-amd64-1cpu
     needs: build
     steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - name: Import secrets
+        uses: hashicorp/vault-action@9f522b85981b491eab9a52c144d15aedbd0bf371 # v2.8.0
+        id: secrets
         with:
-          image-ref: docker.io/wallarm/node:${{ github.ref_name }}
-          severity: 'CRITICAL,HIGH'
-          scanners: vuln
-          format: sarif
-          output: trivy-results.sarif
+          exportEnv: false
+          url: ${{ secrets.VAULT_URL }}
+          role: ${{ secrets.VAULT_ROLE }}
+          method: kubernetes
+          path: kubernetes-ci
+          secrets: |
+            kv-gitlab-ci/data/github/shared/dockerhub-creds user | DOCKERHUB_USER ;
+            kv-gitlab-ci/data/github/shared/dockerhub-creds password | DOCKERHUB_PASSWORD ;
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Docker Scout
+        uses: docker/scout-action@v1
         with:
-          sarif_file: trivy-results.sarif
+          command: cves
+          image: docker.io/wallarm/node:${{ github.ref_name }}
+          to: docker.io/wallarm/node:latest
+          only-severities: critical,high
+          sarif-file: sarif.output.json
+          dockerhub-user: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
+          dockerhub-password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
+
+
+      - name: Upload scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: needs.build.outputs.release_type == 'production'
+        with:
+          sarif_file: sarif.output.json
           token: ${{ github.token }}
