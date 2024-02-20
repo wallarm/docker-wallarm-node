@@ -9,6 +9,7 @@ ARG CONTAINER_VERSION
 ARG GOMPLATE_VERISON
 ARG NGINX_VERSION
 ARG TARGETPLATFORM
+ARG TARGETARCH
 ARG WLRM_FOLDER
 
 MAINTAINER Wallarm Support Team <support@wallarm.com>
@@ -29,8 +30,7 @@ RUN addgroup -S wallarm && \
     adduser -S -D -G wallarm -h /opt/wallarm wallarm && \
     apk update && \
     apk upgrade && \
-    apk add curl bash socat logrotate libgcc \
-        gomplate=~$GOMPLATE_VERISON \
+    apk add curl bash socat logrotate libgcc binutils upx \
         nginx=~$NGINX_VERSION \
         nginx-mod-http-perl=~$NGINX_VERSION \
         nginx-mod-stream=~$NGINX_VERSION \
@@ -43,6 +43,13 @@ RUN addgroup -S wallarm && \
         nginx-mod-http-xslt-filter=~$NGINX_VERSION && \
     nginx -V && \
     rm -r /var/cache/apk/*
+
+# Download gomplate
+RUN curl -sL https://github.com/hairyhenderson/gomplate/releases/download/v${GOMPLATE_VERISON}/gomplate_linux-${TARGETARCH} \
+    -o /usr/local/bin/gomplate && \
+    chmod 755 /usr/local/bin/gomplate && \
+    upx /usr/local/bin/gomplate && \
+    gomplate -v
 
 # Create symlinks to redirect nginx logs to stdout and stderr
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
@@ -74,7 +81,7 @@ RUN apk add --no-cache libcap && \
     setcap -v cap_net_bind_service=+ep /opt/wallarm/usr/bin/tarantool && \
     setcap    cap_net_bind_service=+ep /usr/sbin/nginx && \
     setcap -v cap_net_bind_service=+ep /usr/sbin/nginx && \
-    apk del libcap
+    apk del libcap binutils curl upx
 
 EXPOSE 80 443
 USER wallarm

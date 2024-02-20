@@ -11,7 +11,7 @@ CONTAINER_VERSION ?= test
 ALPINE_VERSION    = 3.18
 NGINX_VERSION     = 1.24.0
 WLRM_FOLDER       = stable-$(shell echo ${NGINX_VERSION} | sed 's/\.//g')
-GOMPLATE_VERISON  = 3.11.5
+GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
 REGISTRY     ?= docker.io/wallarm
