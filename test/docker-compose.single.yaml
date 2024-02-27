@@ -25,6 +25,7 @@ services:
     image: dkr.wallarm.com/tests/smoke-tests:latest
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_PRESET: ${WALLARM_API_PRESET:-audit}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
       CLIENT_ID: ${CLIENT_ID}
       USER_UUID: ${USER_UUID}
@@ -33,6 +34,7 @@ services:
       PYTEST_ARGS: ${PYTEST_ARGS}
       NODE_BASE_URL: http://node
       HOSTNAME_OLD_NODE: smoke-tests-old-node
+      NODE_VERSION: ${NODE_VERSION}
     entrypoint: '/bin/sleep'
     command:
       - infinity
