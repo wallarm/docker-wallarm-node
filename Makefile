@@ -10,6 +10,7 @@ REGISTRY     := docker.io/wallarm
 TAG   	     ?= test
 IMAGE 	     ?= $(REGISTRY)/node:$(TAG)
 IMAGE_LATEST := $(REGISTRY)/node:latest
+NODE_VERSION ?= 4.8.0
 
 COMPOSE_CMD = NODE_IMAGE=$(IMAGE) docker-compose -p $@ -f test/docker-compose.$@.yaml
 NODE_UUID   = $(COMPOSE_CMD) exec node cat /etc/wallarm/node.yaml | grep uuid | awk '{print $$2}'
