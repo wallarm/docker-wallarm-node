@@ -90,7 +90,7 @@ jobs:
           password: ${{ steps.secrets.outputs.token_secret }}
 
       - name: Load cache
-        uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427
         with:
           name: node-${{ matrix.ARCH }}.tar
 
@@ -123,7 +123,7 @@ jobs:
       ARCH: x86_64
     steps:
       - name: Load cache
-        uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427
         with:
           name: node-${{ env.ARCH }}.tar
 
