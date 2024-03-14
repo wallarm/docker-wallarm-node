@@ -73,8 +73,7 @@ jobs:
             kv-gitlab-ci/data/github/ingress api_host ;
             kv-gitlab-ci/data/github/ingress api_preset ;
             kv-gitlab-ci/data/github/ingress client_id ;
-            kv-gitlab-ci/data/github/ingress user_secret ;
-            kv-gitlab-ci/data/github/ingress user_uuid ;
+            kv-gitlab-ci/data/github/ingress user_token ;
             kv-gitlab-ci/data/github/ingress allure_project_id ;
             kv-gitlab-ci/data/github/ingress allure_server_token ;
             kv-gitlab-ci/data/github/ingress allure_server_url ;
@@ -99,8 +98,7 @@ jobs:
 
       - name: Run test
         env:
-          USER_UUID: ${{ steps.secrets.outputs.user_uuid }}
-          USER_SECRET: ${{ steps.secrets.outputs.user_secret }}
+          USER_TOKEN: ${{ steps.secrets.outputs.user_token }}
           WALLARM_API_TOKEN: ${{ steps.secrets.outputs.api_token }}
           WALLARM_API_HOST: ${{ steps.secrets.outputs.api_host }}
           WALLARM_API_PRESET: ${{ steps.secrets.outputs.api_preset }}
