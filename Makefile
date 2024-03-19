@@ -33,6 +33,8 @@ PYTEST_CMD = $(COMPOSE_CMD) exec $(GITHUB_VARS) -e NODE_UUID=$$($(NODE_UUID_CMD)
 
 ### Variables required to run test
 .EXPORT_ALL_VARIABLES:
+ALLURE_ENDPOINT       ?= https://allure.wallarm.com
+ALLURE_PROJECT_ID     ?= 10
 WALLARM_API_HOST      ?= api.wallarm.com
 WALLARM_API_CA_VERIFY ?= True
 CLIENT_ID             ?= 5

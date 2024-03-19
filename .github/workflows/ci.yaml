@@ -72,11 +72,8 @@ jobs:
             kv-gitlab-ci/data/github/ingress api_token ;
             kv-gitlab-ci/data/github/ingress api_host ;
             kv-gitlab-ci/data/github/ingress api_preset ;
-            kv-gitlab-ci/data/github/ingress client_id ;
             kv-gitlab-ci/data/github/ingress user_token ;
-            kv-gitlab-ci/data/github/ingress allure_project_id ;
             kv-gitlab-ci/data/github/ingress allure_server_token ;
-            kv-gitlab-ci/data/github/ingress allure_server_url ;
             kv-gitlab-ci/data/github/shared/smoke-tests-registry-creds token_name ;
             kv-gitlab-ci/data/github/shared/smoke-tests-registry-creds token_secret ;
             kv-gitlab-ci/data/github/shared/smoke-tests-registry-creds registry_name ;
@@ -102,10 +99,7 @@ jobs:
           WALLARM_API_TOKEN: ${{ steps.secrets.outputs.api_token }}
           WALLARM_API_HOST: ${{ steps.secrets.outputs.api_host }}
           WALLARM_API_PRESET: ${{ steps.secrets.outputs.api_preset }}
-          CLIENT_ID: ${{ steps.secrets.outputs.client_id }}
           ALLURE_TOKEN: ${{ steps.secrets.outputs.ALLURE_SERVER_TOKEN }}
-          ALLURE_ENDPOINT: ${{ steps.secrets.outputs.ALLURE_SERVER_URL }}
-          ALLURE_PROJECT_ID: ${{ steps.secrets.outputs.ALLURE_PROJECT_ID }}
           ALLURE_ENVIRONMENT_ARCH: ${{ matrix.ARCH }}
           ALLURE_UPLOAD_REPORT: true
         run: make ${{ matrix.case }}
