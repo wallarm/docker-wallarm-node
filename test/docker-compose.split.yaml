@@ -48,6 +48,8 @@ services:
       ALLURE_TOKEN: ${ALLURE_TOKEN}
       ALLURE_ENDPOINT: ${ALLURE_ENDPOINT}
       ALLURE_RESULTS: ${ALLURE_RESULTS:-/tests/_out/allure_report}
+      WEBHOOK_API_KEY: ${WEBHOOK_API_KEY}
+      WEBHOOK_UUID: ${WEBHOOK_UUID}
       ALLURE_LAUNCH_TAGS: USER:${GITHUB_ACTOR:-local},
         WORKFLOW:${GITHUB_WORKFLOW:-local},
         RUN_ID:${GITHUB_RUN_ID:-local},
