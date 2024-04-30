@@ -55,7 +55,8 @@ services:
         RUN_ID:${GITHUB_RUN_ID:-local},
         BRANCH:${GITHUB_REF_NAME:-local},
         JOB:${GITHUB_JOB:-local},
-        ARCH:${ALLURE_ENVIRONMENT_ARCH:-}
+        ARCH:${ALLURE_ENVIRONMENT_ARCH:-},
+        GITHUB_REPO:${GITHUB_REPOSITORY:-}
       ALLURE_LAUNCH_NAME: ${GITHUB_WORKFLOW:-local}-${GITHUB_RUN_ID:-local}-${GITHUB_JOB:-local}-${ALLURE_ENVIRONMENT_ARCH:-}
     entrypoint: '/bin/sleep'
     command:
