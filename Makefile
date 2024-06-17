@@ -8,8 +8,8 @@ SHELL=/bin/bash -o pipefail -o errexit
 
 AIO_VERSION       ?= 4.10.7-rc1
 CONTAINER_VERSION ?= test
-ALPINE_VERSION    = 3.18
-NGINX_VERSION     = 1.24.0
+ALPINE_VERSION    = 3.20
+NGINX_VERSION     = 1.26.1
 WLRM_FOLDER       = stable-$(shell echo ${NGINX_VERSION} | sed 's/\.//g')
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
