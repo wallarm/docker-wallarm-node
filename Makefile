@@ -6,7 +6,7 @@ SHELL=/bin/bash -o pipefail -o errexit
 
 -include .env
 
-AIO_VERSION       ?= 4.10.6
+AIO_VERSION       ?= 4.10.7-rc1
 CONTAINER_VERSION ?= test
 ALPINE_VERSION    = 3.18
 NGINX_VERSION     = 1.24.0
