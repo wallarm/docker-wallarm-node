@@ -88,7 +88,7 @@ jobs:
             kv-gitlab-ci/data/github/shared/smoke-tests-registry-creds registry_name ;
 
       - name: Login
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
         with:
           registry: ${{ steps.secrets.outputs.registry_name }}
           username: ${{ steps.secrets.outputs.token_name }}
