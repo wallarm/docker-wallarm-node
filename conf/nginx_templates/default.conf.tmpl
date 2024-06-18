@@ -39,23 +39,6 @@ server {
         }
         {{ end }}
 
-        {{ if or (eq (env.Getenv "WALLARM_APIFW_ENABLE") "") (and (ne (env.Getenv "WALLARM_APIFW_ENABLE") "False") (ne (env.Getenv "WALLARM_APIFW_ENABLE") "false")) -}}
-        location ~ ^/wallarm-apifw(.*)$ {
-                wallarm_mode off;
-                proxy_pass http://127.0.0.1:8088$1;
-                error_page 404 431         = @wallarm-apifw-fallback;
-                error_page 500 502 503 504 = @wallarm-apifw-fallback;
-
-                allow 127.0.0.0/8;
-                deny all;
-        }
-
-        location @wallarm-apifw-fallback {
-                wallarm_mode off;
-                return 500 "API FW fallback";
-        }
-        {{ end }}
-
         location / {
                 {{ $nginxBackend := "http://127.0.0.1:8080" }}
                 {{ if env.Getenv "NGINX_BACKEND" -}}
