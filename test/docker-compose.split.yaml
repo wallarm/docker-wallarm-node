@@ -7,6 +7,7 @@ services:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
+      WALLARM_LABELS: ${WALLARM_LABELS}
       POSTANALYTIC_ADDRESS: post-analytics
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
