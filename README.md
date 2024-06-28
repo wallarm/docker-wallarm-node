@@ -9,6 +9,9 @@ Wallarm end-to-end API Security protects websites, APIs and microservices from O
 * docker
 * docker-compose
 * gnu-sed (insted of `sed` util, just for MacOS)
+  ```
+    brew install gnu-sed
+    export PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
 
 ### Build
 
