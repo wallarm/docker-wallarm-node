@@ -44,11 +44,22 @@ TEST_RS               ?= false
 
 # Single-platform for local, multi-platform for CI
 ifndef CI
-	PLATFORMS?=amd64
-	ARCHS?=x86_64
+	ARCH ?=$(shell uname -m)
+	ifeq ($(ARCH), x86_64)
+        PLATFORMS?=linux/amd64
+        ARCHS?=x86_64
+    else ifeq ($(ARCH), arm64)
+        PLATFORMS?=linux/arm64
+        ARCHS?=aarch64
+    else ifeq ($(ARCH), amd64)
+        PLATFORMS?=linux/amd64
+        ARCHS?=x86_64
+    else
+        $(error Unsupported architecture "$(ARCH)")
+    endif
 	BUILDX_ARGS?=--load
 else
-	PLATFORMS?=amd64,aarch64
+	PLATFORMS?=linux/amd64,linux/aarch64
 	ARCHS?=x86_64 aarch64
 	BUILDX_ARGS?=--push
 endif
@@ -74,6 +85,7 @@ endif
 		--build-arg AIO_VERSION="$(AIO_VERSION)" \
 		--build-arg WLRM_FOLDER="$(WLRM_FOLDER)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--no-cache \
 		-t $(IMAGE) $(BUILDX_ARGS) .
 
 setup_buildx:
