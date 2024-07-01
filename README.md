@@ -4,3 +4,19 @@ Wallarm end-to-end API Security protects websites, APIs and microservices from O
 
 * [Image on Docker Hub](https://hub.docker.com/r/wallarm/node)
 * [Detailed instructions for running the Docker container](https://docs.wallarm.com/admin-en/installation-docker-en/)
+
+### Software requirements
+* docker
+* docker-compose
+* gnu-sed (insted of `sed` util, just for MacOS)
+  ```
+    brew install gnu-sed
+    export PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+
+### Build
+
+Use `make build` to build `wallarm/node:test` docker image.
+
+### Tests
+
+Use `make smoke-test` to run smoke tests.
