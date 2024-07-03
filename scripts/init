@@ -125,6 +125,8 @@ configure_services() {
   then
     sed -i -e '/\[program:api-firewall\]/,/\/api-firewall-out.log/d' \
       /opt/wallarm/etc/supervisord.conf
+    sed -i -e '/wallarm-apifw-loc/d' \
+      /etc/nginx/nginx.conf
   fi
 }
 
