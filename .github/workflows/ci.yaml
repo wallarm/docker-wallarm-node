@@ -34,7 +34,7 @@ jobs:
         run: docker save -o node-${{ matrix.ARCH }}.tar docker.io/wallarm/node:test
 
       - name: Cache image
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
         with:
           retention-days: 1
           name: node-${{ matrix.ARCH }}.tar
