@@ -8,6 +8,15 @@ if [ "$ARCH" == "aarch64" ]; then
     DOCKER_ARCH="arm64"
 fi
 
+if [[ "$OSTYPE" == Darwin* ]]; then
+  if ! command -v gnu-sed &> /dev/null
+  then
+    echo "gnu-sed could not be found. Run \"brew install gnu-sed\""
+    echo "export PATH=\"/opt/homebrew/opt/gnu-sed/libexec/gnubin:\$PATH\""
+    exit 1
+  fi
+fi
+
 BUILD_DIR="build/linux/${DOCKER_ARCH}"
 
 sed -i -E \
