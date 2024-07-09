@@ -14,8 +14,6 @@ WLRM_FOLDER       = stable-$(shell echo ${NGINX_VERSION} | sed 's/\.//g')
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
-OSTYPE = $(shell uname -s)
-
 REGISTRY     ?= docker.io/wallarm
 IMAGE 	     ?= $(REGISTRY)/node:$(CONTAINER_VERSION)
 IMAGE_LATEST := $(REGISTRY)/node:latest
