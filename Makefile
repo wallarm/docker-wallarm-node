@@ -44,7 +44,7 @@ PYTEST_WORKERS        ?= 10
 PYTEST_ARGS           ?= --allure-features=Node
 TEST_RS               ?= false
 
-WALLARM_LABELS		  ?='group=default_docker_smoke_test'
+WALLARM_LABELS		  ?='group=defaultDockerNode'
 
 # Single-platform for local, multi-platform for CI
 ifndef CI
