@@ -8,6 +8,7 @@ services:
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
       POSTANALYTIC_ADDRESS: post-analytics
+      WALLARM_LABELS: ${WALLARM_LABELS}
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
@@ -25,6 +26,7 @@ services:
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
       POSTANALYTIC_ONLY: true
+      WALLARM_LABELS: ${WALLARM_LABELS}
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
