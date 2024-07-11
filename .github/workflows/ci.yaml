@@ -113,7 +113,16 @@ jobs:
           ALLURE_UPLOAD_REPORT: true
           WEBHOOK_API_KEY: ${{ steps.secrets.outputs.webhook_api_key }}
           WEBHOOK_UUID: ${{ steps.secrets.outputs.webhook_uuid }}
+          ARCH: ${{ matrix.ARCH }}
         run: make ${{ matrix.case }}
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          retention-days: 5
+          name: node-logs-${{ matrix.ARCH }}-${{ matrix.case }}.tar.gz
+          path: node-logs-${{ matrix.ARCH }}-${{ matrix.case }}.tar.gz
 
   scan:
     name: Vulnerability scanner
