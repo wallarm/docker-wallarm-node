@@ -22,7 +22,7 @@ sed -i \
     "$BUILD_DIR/opt/wallarm/etc/collectd/wallarm-collectd.conf"
 
 sed -i -E \
-    -e '/LUA/s/(.*)=(.*)/\1="\2"/' \
+    -e '/LUA/s/(.*)=([^"'\''].*)/\1="\2"/' \
     "$BUILD_DIR/opt/wallarm/env.list"
 
 cat conf/supervisord.conf.socat >> "$BUILD_DIR/opt/wallarm/etc/supervisord.conf.filtering"
