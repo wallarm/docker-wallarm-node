@@ -5,14 +5,14 @@ set -e
 set -a
 
 WLRM_FOLDER=stable-$(echo $NGINX_VERSION | sed 's/\.//g')
+ARCH=$(uname -m)
 
 # Single-platform for local, multi-platform for CI
 if [[ "${CI:-false}" == "true" ]]; then
   PLATFORMS=${PLATFORMS:-linux/amd64,linux/aarch64}
   ARCHS=${ARCHS:-x86_64 aarch64}
-  BUILDX_ARG={BUILDX_ARGS:---push}
+  BUILDX_ARG=${BUILDX_ARGS:---push}
 else
-  ARCH=$(uname -m)
   if [ "$ARCH" = "x86_64" ]; then
     PLATFORMS=linux/amd64
     ARCHS=x86_64
