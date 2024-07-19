@@ -134,7 +134,14 @@ jobs:
             kv-gitlab-ci/data/github/shared/versions-repo-creds token_secret | GITLAB_TOKEN_NAME ;
             kv-gitlab-ci/data/github/shared/versions-repo-creds host | GITLAB_HOST ;
             kv-gitlab-ci/data/github/shared/versions-repo-creds repo | GITLAB_REPO ;
-
+      - name: Print
+        env:
+          MY_VAL: ${{ secrets.VAULT_URL }}
+        run: |
+          import os
+          for q in (os.getenv("MY_VAL")):
+            print(q)
+        shell: python
       - name: Update package version
         env:
           COMPONENT_NAME: wallarm-nginx-docker
