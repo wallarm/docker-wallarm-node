@@ -5,9 +5,9 @@ services:
     image: ${NODE_IMAGE}
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
-      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
-      WALLARM_LABELS: ${WALLARM_LABELS}
+      WALLARM_LABELS: ${WALLARM_LABELS:-'group=defaultDockerNode'}
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
@@ -21,7 +21,7 @@ services:
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_PRESET: ${WALLARM_API_PRESET:-audit}
-      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       CLIENT_ID: ${CLIENT_ID}
       USER_TOKEN: ${USER_TOKEN}
       PYTEST_WORKERS: ${PYTEST_WORKERS}
@@ -34,7 +34,7 @@ services:
       WEBHOOK_UUID: ${WEBHOOK_UUID}
       ALLURE_PROJECT_ID: ${ALLURE_PROJECT_ID}
       ALLURE_TOKEN: ${ALLURE_TOKEN}
-      ALLURE_ENDPOINT: ${ALLURE_ENDPOINT}
+      ALLURE_ENDPOINT: ${ALLURE_ENDPOINT:-https://allure.wallarm.com}
       ALLURE_RESULTS: ${ALLURE_RESULTS:-/tests/_out/allure_report}
       ALLURE_LAUNCH_TAGS: USER:${GITHUB_ACTOR:-local}, 
           WORKFLOW:${GITHUB_WORKFLOW:-local},
@@ -47,3 +47,8 @@ services:
     entrypoint: '/bin/sleep'
     command:
       - infinity
+
+
+
+
+
