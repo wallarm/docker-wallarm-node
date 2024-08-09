@@ -19,17 +19,8 @@ IMAGE_LATEST := $(REGISTRY)/node:latest
 
 NODE_VERSION    ?= $(shell echo $(AIO_VERSION) | awk -F'[-.]' '{print $$1"."$$2"."$$3}')
 
-### Variables required to run test
-.EXPORT_ALL_VARIABLES:
-ALLURE_ENDPOINT       ?= https://allure.wallarm.com
-ALLURE_PROJECT_ID     ?= 10
-WALLARM_API_HOST      ?= api.wallarm.com
-WALLARM_API_CA_VERIFY ?= True
-CLIENT_ID             ?= 5
-PYTEST_WORKERS        ?= 10
-PYTEST_ARGS           ?= --allure-features=Node
-TEST_RS               ?= false
-WALLARM_LABELS		  ?='group=defaultDockerNode'
+PYTEST_WORKERS 	?= 10
+PYTEST_ARGS 	?= --allure-features=Node
 
 ### Build routines
 ###

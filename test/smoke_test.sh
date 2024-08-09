@@ -23,9 +23,76 @@ function get_logs_clean_and_exit() {
   eval "$COMPOSE_CMD down"
 }
 
+function check_mandatory_vars() {
+
+    declare -a mandatory
+    declare -a allure_mandatory
+    env_list=""
+
+    # mandatory vars for smoke tests
+    mandatory=(
+      WALLARM_API_TOKEN
+      WALLARM_API_HOST
+      WALLARM_API_PRESET
+      CLIENT_ID
+      USER_TOKEN
+      WEBHOOK_API_KEY
+      WEBHOOK_UUID
+    )
+
+    for var in "${mandatory[@]}"; do
+      if [[ -z "${!var:-}" ]]; then
+        env_list+=" $var"
+      fi
+    done
+
+    if [[ ! "${CI:-false}" == "true" ]]; then
+      local_mandatory=(
+        SMOKE_REGISTRY_TOKEN
+        SMOKE_REGISTRY_SECRET
+      )
+
+      for var in "${local_mandatory[@]}"; do
+        if [[ -z "${!var:-}" ]]; then
+          env_list+=" $var"
+        fi
+      done
+    fi
+
+    if [[ "${ALLURE_UPLOAD_REPORT:-false}" == "true" ]]; then
+
+      allure_mandatory=(
+        ALLURE_TOKEN
+        ALLURE_ENVIRONMENT_ARCH
+        ALLURE_PROJECT_ID
+      )
+
+      for var in "${allure_mandatory[@]}"; do
+        if [[ -z "${!var:-}" ]]; then
+          env_list+=" $var"
+        fi
+      done
+    fi
+
+    if [[ -n "$env_list" ]]; then
+      for var in ${env_list}; do
+        echo -e "${RED}Environment variable $var must be set${NC}"
+      done
+      exit 1
+    fi
+
+}
+
+
 set -x
 set -e
 set -a
+
+RED='\033[0;31m'
+NC='\033[0m'
+
+# check if all mandatory vars was defined
+check_mandatory_vars
 
 #single or split mode
 NODE_MODE=$1
@@ -51,7 +118,7 @@ fi
 echo "Retrieving Wallarm Node UUID ..."
 NODE_UUID=$(eval "$COMPOSE_CMD exec node cat /opt/wallarm/etc/wallarm/node.yaml | grep uuid | awk '{print \$2}'")
 if [[ -z "${NODE_UUID}" ]]; then
-  echo "Failed to retrieve Wallarm Node UUID"
+  echo -e "${RED}Failed to retrieve Wallarm Node UUID${NC}"
   exit 1
 fi
 

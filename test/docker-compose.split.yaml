@@ -5,10 +5,10 @@ services:
     image: ${NODE_IMAGE}
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
-      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
       POSTANALYTIC_ADDRESS: post-analytics
-      WALLARM_LABELS: ${WALLARM_LABELS}
+      WALLARM_LABELS: ${WALLARM_LABELS:-'group=defaultDockerNode'}
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
@@ -23,7 +23,7 @@ services:
     image: ${NODE_IMAGE}
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
-      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
       POSTANALYTIC_ONLY: true
       WALLARM_LABELS: ${WALLARM_LABELS}
@@ -37,7 +37,7 @@ services:
     environment:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_PRESET: ${WALLARM_API_PRESET:-audit}
-      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       CLIENT_ID: ${CLIENT_ID}
       USER_TOKEN: ${USER_TOKEN}
       PYTEST_WORKERS: ${PYTEST_WORKERS}
@@ -48,7 +48,7 @@ services:
       NODE_VERSION: ${NODE_VERSION}
       ALLURE_PROJECT_ID: ${ALLURE_PROJECT_ID}
       ALLURE_TOKEN: ${ALLURE_TOKEN}
-      ALLURE_ENDPOINT: ${ALLURE_ENDPOINT}
+      ALLURE_ENDPOINT: ${ALLURE_ENDPOINT:-https://allure.wallarm.com}
       ALLURE_RESULTS: ${ALLURE_RESULTS:-/tests/_out/allure_report}
       WEBHOOK_API_KEY: ${WEBHOOK_API_KEY}
       WEBHOOK_UUID: ${WEBHOOK_UUID}

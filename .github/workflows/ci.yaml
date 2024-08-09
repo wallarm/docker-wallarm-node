@@ -104,13 +104,14 @@ jobs:
 
       - name: Run test
         env:
+          ALLURE_PROJECT_ID: 10
+          ALLURE_UPLOAD_REPORT: true
+          ALLURE_TOKEN: ${{ steps.secrets.outputs.ALLURE_SERVER_TOKEN }}
+          ALLURE_ENVIRONMENT_ARCH: ${{ matrix.ARCH }}
           USER_TOKEN: ${{ steps.secrets.outputs.user_token }}
           WALLARM_API_TOKEN: ${{ steps.secrets.outputs.api_token }}
           WALLARM_API_HOST: ${{ steps.secrets.outputs.api_host }}
           WALLARM_API_PRESET: ${{ steps.secrets.outputs.api_preset }}
-          ALLURE_TOKEN: ${{ steps.secrets.outputs.ALLURE_SERVER_TOKEN }}
-          ALLURE_ENVIRONMENT_ARCH: ${{ matrix.ARCH }}
-          ALLURE_UPLOAD_REPORT: true
           WEBHOOK_API_KEY: ${{ steps.secrets.outputs.webhook_api_key }}
           WEBHOOK_UUID: ${{ steps.secrets.outputs.webhook_uuid }}
           ARCH: ${{ matrix.ARCH }}
