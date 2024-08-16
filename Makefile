@@ -9,7 +9,7 @@ SHELL=/bin/bash -o pipefail -o errexit
 AIO_VERSION       ?= 4.10.9
 CONTAINER_VERSION ?= test
 ALPINE_VERSION    = 3.20
-NGINX_VERSION     = 1.26.1
+NGINX_VERSION     = 1.26.2
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
