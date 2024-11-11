@@ -7,7 +7,8 @@ services:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
-      WALLARM_LABELS: ${WALLARM_LABELS:-'group=defaultDockerNode'}
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_LABELS: "group=${NODE_GROUP_NAME}"
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
@@ -19,6 +20,7 @@ services:
   pytest:
     image: dkr.wallarm.com/tests/smoke-tests:latest
     environment:
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_PRESET: ${WALLARM_API_PRESET:-audit}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}

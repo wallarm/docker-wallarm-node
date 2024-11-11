@@ -7,8 +7,9 @@ services:
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_LABELS: ${WALLARM_LABELS}
       POSTANALYTIC_ADDRESS: post-analytics
-      WALLARM_LABELS: ${WALLARM_LABELS:-'group=defaultDockerNode'}
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
       timeout: 5s
@@ -26,6 +27,7 @@ services:
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
       WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
       POSTANALYTIC_ONLY: true
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
       WALLARM_LABELS: ${WALLARM_LABELS}
     healthcheck:
       test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
@@ -35,6 +37,7 @@ services:
   pytest:
     image: dkr.wallarm.com/tests/smoke-tests:latest
     environment:
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
       WALLARM_API_HOST: ${WALLARM_API_HOST}
       WALLARM_API_PRESET: ${WALLARM_API_PRESET:-audit}
       WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
