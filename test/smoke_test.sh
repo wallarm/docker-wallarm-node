@@ -38,6 +38,7 @@ function check_mandatory_vars() {
       USER_TOKEN
       WEBHOOK_API_KEY
       WEBHOOK_UUID
+      NODE_GROUP_NAME
     )
 
     for var in "${mandatory[@]}"; do
@@ -91,6 +92,9 @@ set -a
 RED='\033[0;31m'
 NC='\033[0m'
 
+export NODE_GROUP_NAME="github-docker-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 12; echo)"
+export WALLARM_LABELS="group=${NODE_GROUP_NAME}"
+
 # check if all mandatory vars was defined
 check_mandatory_vars
 
@@ -98,9 +102,9 @@ check_mandatory_vars
 NODE_MODE=$1
 LOGS_DIR="${PWD}/test/logs/${NODE_MODE}"
 
-COMPOSE_CMD="NODE_IMAGE=$IMAGE docker-compose -p $NODE_MODE -f test/docker-compose.$NODE_MODE.yaml"
+COMPOSE_CMD="NODE_IMAGE=$IMAGE NODE_GROUP_NAME=$NODE_GROUP_NAME docker-compose -p $NODE_MODE -f test/docker-compose.$NODE_MODE.yaml"
 
-echo "Staring Docker compose in ${NODE_MODE} mode ..."
+echo "Staring Docker compose in ${NODE_MODE} mode using ${NODE_GROUP_NAME} group..."
 eval "$COMPOSE_CMD up -d --wait --quiet-pull"
 
 # trap for logs and exit
@@ -115,13 +119,6 @@ if [ "$ALLURE_UPLOAD_REPORT" = "true" ]; then
   RUN_TESTS="pytest allurectl watch --job-uid $RAND_NUM -- pytest"
 fi
 
-echo "Retrieving Wallarm Node UUID ..."
-NODE_UUID=$(eval "$COMPOSE_CMD exec node cat /opt/wallarm/etc/wallarm/node.yaml | grep uuid | awk '{print \$2}'")
-if [[ -z "${NODE_UUID}" ]]; then
-  echo -e "${RED}Failed to retrieve Wallarm Node UUID${NC}"
-  exit 1
-fi
-
-PYTEST_CMD="$COMPOSE_CMD exec $GITHUB_VARS -e NODE_UUID=$NODE_UUID $RUN_TESTS -n $PYTEST_WORKERS $PYTEST_ARGS"
+PYTEST_CMD="$COMPOSE_CMD exec $GITHUB_VARS $RUN_TESTS -n $PYTEST_WORKERS $PYTEST_ARGS"
 echo "Running tests ..."
 eval $PYTEST_CMD

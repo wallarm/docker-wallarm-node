@@ -128,7 +128,7 @@ jobs:
           ALLURE_TOKEN: ${{ steps.secrets.outputs.ALLURE_SERVER_TOKEN }}
           ALLURE_ENVIRONMENT_ARCH: ${{ matrix.ARCH }}
           USER_TOKEN: ${{ steps.secrets.outputs.user_token }}
-          WALLARM_API_TOKEN: ${{ steps.secrets.outputs.api_token }}
+          WALLARM_API_TOKEN: ${{ steps.secrets.outputs.user_token }}
           WALLARM_API_HOST: ${{ steps.secrets.outputs.api_host }}
           WALLARM_API_PRESET: ${{ steps.secrets.outputs.api_preset }}
           WEBHOOK_API_KEY: ${{ steps.secrets.outputs.webhook_api_key }}
