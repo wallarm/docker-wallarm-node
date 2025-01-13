@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v3.0.2
 
       - name: Import secrets
-        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
         id: secrets
         with:
           exportEnv: false
@@ -66,7 +66,7 @@ jobs:
     if: needs.build.outputs.release_type == 'production'
     steps:
       - name: Import secrets
-        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
         id: secrets
         with:
           exportEnv: false
@@ -121,7 +121,7 @@ jobs:
     needs: build
     steps:
       - name: Import secrets
-        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
         id: secrets
         with:
           exportEnv: true
@@ -190,7 +190,7 @@ jobs:
     needs: build
     steps:
       - name: Import secrets
-        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
         id: secrets
         with:
           exportEnv: false
