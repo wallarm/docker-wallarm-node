@@ -1,0 +1,156 @@
+variables:
+  DEPLOYER_BRANCH:
+    description: "Branch to trigger aio deployer"
+    value: "2.2.2"
+
+  DEPLOYER_IMAGE: dkr.wallarm.com/all/qa/aio_deploy/aio_deploy:${DEPLOYER_BRANCH}
+
+  RUN_SMOKE:
+    description: "Defines whether to run all kind of tests or not"
+    value: "AiO and docker and scripts and unit"
+    options:
+      - "AiO and docker and scripts and unit and compat"
+      - "AiO and docker and scripts and unit"
+      - "AiO and docker and scripts"
+      - "AiO only"
+      - "docker only"
+      - "scripts only"
+      - "compat only"
+      - "no"
+  WALLARM_API_PRESET:
+    value: "us1"
+    description: "Cloud to deploy the node on"
+    options:
+      - "eu1"
+      - "us1"
+      - "audit"
+  COMPARATOR_TARGET:
+    value: ""
+    description: "Node docker image to compare with. Would be last tag if empty"
+
+  AIO_NAME_PREFIX: meganode
+
+.x-script-docker-login: &x_script_docker_login
+  - docker login ${CI_REGISTRY} -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  - docker login ${CI_DEPENDENCY_PROXY_SERVER} -u "${CI_DEPENDENCY_PROXY_USER}" -p "${CI_DEPENDENCY_PROXY_PASSWORD}"
+
+.x-get-api-creds: &x_get_api_creds
+  - |
+    export WALLARM_API_HOST=$(yq -r '.eu1.host' ${X_SMOKE_TEST_PRESETS_FILE})
+    export WALLARM_API_TOKEN=$(yq -r '.eu1.user_token' ${X_SMOKE_TEST_PRESETS_FILE})
+    export CLIENT_ID=$(yq -r '.eu1.clientid' ${X_SMOKE_TEST_PRESETS_FILE})
+    export USER_TOKEN=$(yq -r '.eu1.user_token' ${X_SMOKE_TEST_PRESETS_FILE})
+    export WEBHOOK_UUID=$(yq -r '.eu1.webhook_uuid' ${X_SMOKE_TEST_PRESETS_FILE})
+    export WEBHOOK_API_KEY=$(yq -r '.eu1.webhook_api_key' ${X_SMOKE_TEST_PRESETS_FILE})
+
+.x-get-allure: &x_get_allure
+  - |
+    export ALLURE_TOKEN=${ALLURE_TOKEN}
+    export ALLURE_PROJECT_ID=10
+
+.x-get-allure-token: &x_get_allure_token
+  - export ALLURE_TOKEN=$(vault kv get -field=allure_server_token kv-gitlab-ci/github/ingress)
+
+TEST_REGISTER_NODE:
+  tags: [infra-c05r1-dind-amd]
+  image: "dkr.wallarm.com/wallarm-node/meganode/register-tests"
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+    NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+    ALLURE_PROJECT_ID: 3
+    ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_JOB_ID}"
+    ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
+  rules:
+    - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  before_script:
+    - !reference [.before-git-checkout, before_script]
+    - AIO_REPOSITORY_URL="https://${GITLAB_TOKEN_NAME}:${GITLAB_TOKEN}@${GITLAB_HOST}/wallarm-node/meganode.git"
+    - git init .
+    - git remote add origin $AIO_REPOSITORY_URL
+    - git sparse-checkout set libs/go/wallarm-common-ng
+    - git fetch origin --tags $UPSTREAM_CI_COMMIT_REF_NAME
+    - git checkout $UPSTREAM_CI_COMMIT_REF_NAME
+    - *x_get_allure_token
+    - *x_script_docker_login
+    - docker pull ${NODE_DOCKER_IMAGE}
+  script:
+    - export ALLURE_PROJECT_ID=3
+    - cd libs/go/wallarm-common-ng/
+    - make test-functional-ci
+
+SMOKE_TESTS_DOCKER_AIO:
+  stage: test
+  rules:
+    - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
+      variables:
+        NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+  variables:
+    PYTEST_PARAMS: "--allure-features=Node"
+    TEST_NODE_DEPLOY_TARGET: "docker only"
+  trigger:
+    strategy: depend
+    project: tests/smoke-tests
+    branch: master
+
+SMOKE_TESTS_DOCKER_RELEASE:
+  stage: test
+  image: dkr.wallarm.com/devops/docker/github-runner-arc:v1.0.6-dind # the only multi-arch that has compose and everything we need
+  rules:
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+      variables:
+        NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+  before_script:
+    - *x_get_api_creds
+    - *x_get_allure
+    - *x_script_docker_login
+    - export IMAGE=$NODE_DOCKER_IMAGE
+    - export ALLURE_ENVIRONMENT_ARCH=$ARCH
+  script:
+    make $CASE
+  parallel:
+    matrix:
+      - ARCH: x86_64
+        RUNNER: infra-c2r4-dind-amd
+        CASE: [ single, split ]
+      - ARCH: aarch64
+        RUNNER: infra-c2r4-dind-arm
+        CASE: [ single, split ]
+  tags:
+    - ${RUNNER}
+  artifacts:
+    paths:
+      - node-logs-*.tar.gz
+
+LOAD_TEST:
+  stage: test
+  variables:
+    OVERLOAD_COMPARE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+  rules:
+    - if: $X_CI_BUILD_KIND == "develop"
+      when: manual
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  trigger:
+    strategy: depend
+    project: tests/performance/overload
+    branch: main
+  allow_failure: true
+
+RUN_COMPARATOR:
+  stage: test
+  variables:
+    DUMP_NUMBERS: "0 1 2 3 4 5"
+    WALLARM_NODE1_IMAGE: "docker.io/wallarm/${IMAGE_NAME}:latest"
+    WALLARM_NODE2_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+  rules:
+    - if: $X_CI_BUILD_KIND == "develop"
+      when: manual
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  trigger:
+    project: all/qa/comparator
+    strategy: depend
+    branch: master
+    forward:
+      yaml_variables: true
+  allow_failure: true

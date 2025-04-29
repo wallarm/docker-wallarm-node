@@ -1,0 +1,62 @@
+services:
+  node:
+    image: ${NODE_IMAGE}
+    ports:
+      - "5000:80"
+    environment:
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
+      WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_LABELS: ${WALLARM_LABELS}
+      POSTANALYTIC_ADDRESS: post-analytics
+    healthcheck:
+      test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
+      timeout: 5s
+      retries: 10
+    volumes:
+      - "./nginx_conf/wallarm_node.conf:/etc/nginx/http.d/default.conf"
+      - "./nginx_conf/nginx_node.conf:/etc/nginx/http.d/workload.conf"
+    depends_on:
+      - post-analytics
+
+  post-analytics:
+    image: ${NODE_IMAGE}
+    environment:
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
+      WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
+      POSTANALYTIC_ONLY: true
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_LABELS: ${WALLARM_LABELS}
+    healthcheck:
+      test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
+      timeout: 5s
+      retries: 10
+
+  pytest:
+    image: dkr.wallarm.com/tests/smoke-tests:latest
+    environment:
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_PRESET: ${WALLARM_API_PRESET:-audit}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
+      CLIENT_ID: ${CLIENT_ID}
+      USER_TOKEN: ${USER_TOKEN}
+      PYTEST_WORKERS: ${PYTEST_WORKERS}
+      PYTEST_PARAMS: ${PYTEST_PARAMS}
+      NODE_BASE_URL: http://node
+      HOSTNAME_OLD_NODE: smoke-tests-old-node
+      ALLURE_ENVIRONMENT_ARCH: ${ALLURE_ENVIRONMENT_ARCH}
+      NODE_VERSION: ${AIO_VERSION}
+      ALLURE_PROJECT_ID: ${ALLURE_PROJECT_ID}
+      ALLURE_TOKEN: ${ALLURE_TOKEN}
+      ALLURE_ENDPOINT: ${ALLURE_ENDPOINT:-https://allure.wallarm.com}
+      ALLURE_RESULTS: ${ALLURE_RESULTS:-/tests/_out/allure_report}
+      WEBHOOK_API_KEY: ${WEBHOOK_API_KEY}
+      WEBHOOK_UUID: ${WEBHOOK_UUID}
+      ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
+      ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_PIPELINE_ID} ${ALLURE_ENVIRONMENT_ARCH}"
+    entrypoint: '/bin/sleep'
+    command:
+      - infinity

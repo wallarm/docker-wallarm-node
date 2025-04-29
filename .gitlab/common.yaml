@@ -1,0 +1,55 @@
+.x-docker-login-private: &x_docker_login_private
+  - | # GitLab Container Registry
+    docker login "${CI_REGISTRY}" \
+        -u "${CI_REGISTRY_USER}" \
+        -p "${CI_REGISTRY_PASSWORD}"
+  - | # GitLab Dependency Proxy
+    docker login "${CI_DEPENDENCY_PROXY_SERVER}" \
+        -u "${CI_DEPENDENCY_PROXY_USER}" \
+        -p "${CI_DEPENDENCY_PROXY_PASSWORD}"
+
+.x-docker-login-public: &x_docker_login_public
+  - | # DockerHub
+    docker login \
+        -u "${X_CREDS_DOCKERHUB_WALLARMCICD_USER}" \
+        -p "${X_CREDS_DOCKERHUB_WALLARMCICD_PASSWORD}"
+
+.x-vault-login: &x_vault_login
+  - | # login to vault.wallarm.com
+    vault write -field=token \
+    auth/kubernetes/login \
+    role=gitlab-runner \
+    jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > ${HOME}/.vault-token
+
+.x-tools-build-deps: &x-tools-build-deps
+  - |
+    apk update
+    apk add bash make git tar curl
+
+.x-get-credentials: &x_get_credentials
+  - |
+    export GITLAB_TOKEN=$(vault kv get -field=token_secret kv-gitlab-ci/github/shared/versions-repo-creds)
+    export GITLAB_TOKEN_NAME=$(vault kv get -field=token_name kv-gitlab-ci/github/shared/versions-repo-creds)
+    export GITLAB_HOST=$(vault kv get -field=host kv-gitlab-ci/github/shared/versions-repo-creds)
+    export GITLAB_REPO=$(vault kv get -field=repo kv-gitlab-ci/github/shared/versions-repo-creds)
+
+.private-registry-auth:
+  before_script:
+    - *x_docker_login_private
+
+
+.before-scout-scan:
+  before_script:
+    - *x-tools-build-deps
+    - *x_docker_login_private
+    - *x_docker_login_public
+
+.before-sign-docker:
+  before_script:
+    - *x_vault_login
+    - *x_docker_login_public
+
+.before-git-checkout:
+  before_script:
+    - *x_vault_login
+    - *x_get_credentials
