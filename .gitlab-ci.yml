@@ -1,0 +1,145 @@
+include:
+  - local: .gitlab/common.yaml
+  - local: .gitlab/tests.yaml
+
+default:
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/devops/docker/gitlab-runner/gitlab-runner:v1.11.6
+  tags: [infra-c05r1-amd]
+
+stages:
+  - build
+  - test
+  - scan
+  - publish
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  VAULT_ADDR: https://vault.wallarm.com
+  IMAGE_NAME: node
+  UPSTREAM_CI_COMMIT_REF_NAME: main
+  AIO_VERSION:
+    value: "6.0.2"
+    description: "AIO upstream version"
+  X_CI_BUILD_KIND:
+    description: either develop or production
+    value: develop
+    options:
+      - develop
+      - production
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^([0-9]+\.[0-9]+\.[0-9]+).*$/
+      variables:
+        X_CI_BUILD_KIND: production
+    - if: $CI_PIPELINE_SOURCE == "pipeline"
+      when: always
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: never
+
+
+### BUILD IMAGE (FOR FEATURE BRANCHES)
+
+BUILD_AIO_DOCKER_UPSTREAM:
+  stage: build
+  tags: [infra-c4r8-dind-amd]
+  extends:
+    - .private-registry-auth
+  rules:
+    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE == "pipeline"'
+  variables:
+    SKIP_AIO_DOWNLOAD: true
+  script:
+    - echo $UPSTREAM_CI_PIPELINE_REF_NAME
+    - echo $UPSTREAM_CI_COMMIT_REF_NAME
+    - echo $AIO_VERSION
+    - ls -la apps/aio/artifacts/final/
+    - mkdir -p build/linux/amd64/opt/wallarm
+    - sh apps/aio/artifacts/final/wallarm-${AIO_VERSION}.x86_64-musl.sh --keep --noexec --target build/linux/amd64/opt/wallarm
+    - mkdir -p build/linux/arm64/opt/wallarm
+    - sh apps/aio/artifacts/final/wallarm-${AIO_VERSION}.aarch64-musl.sh --keep --noexec --target build/linux/arm64/opt/wallarm
+    - make docker-image-build
+  needs:
+    - project: wallarm-node/meganode
+      ref: $UPSTREAM_CI_PIPELINE_REF_NAME
+      job: 'BUILD_MEGANODE: [x86_64, infra-c4r8-dind-amd, musl]'
+      artifacts: true
+    - project: wallarm-node/meganode
+      ref: $UPSTREAM_CI_PIPELINE_REF_NAME
+      job: 'BUILD_MEGANODE: [aarch64, infra-c6r12-dind-arm, musl]'
+      artifacts: true
+
+BUILD_AIO_DOCKER:
+  stage: build
+  tags: [infra-c4r8-dind-amd]
+  extends:
+    - .private-registry-auth
+  rules:
+    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
+  script:
+    - make docker-image-build
+
+# Vulnerability scan with report
+
+DOCKER_SCOUT_SCAN_ARTIFACT:
+  stage: scan
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/devops/docker/gitlab-runner-helper-images/security_scanners:1.0.32
+  needs:
+    - job: BUILD_AIO_DOCKER_UPSTREAM
+      optional: true
+    - job: BUILD_AIO_DOCKER
+      optional: true
+  variables:
+    DOCKER_SCOUT_ARGS: "--exit-code --only-severity critical,high"
+  rules:
+    - if: $X_CI_BUILD_KIND =~ /^(develop)$/
+      allow_failure: true
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  extends:
+    - .before-scout-scan
+  script:
+    - make docker-scout-scan
+
+PUSH_DOCKER:
+  stage: publish
+  rules:
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  image: docker:24.0.5
+  extends:
+    - .before-scout-scan
+  script:
+    - make docker-push
+
+SIGN_DOCKER:
+  stage: publish
+  needs:
+    - job: PUSH_DOCKER
+  tags: [infra-c1r2-dind-amd]
+  rules:
+    - if: $X_CI_BUILD_KIND == "production"
+  extends:
+    - .before-sign-docker
+  script:
+    - |
+      export IMAGE="docker.io/wallarm/${IMAGE_NAME}:${AIO_VERSION}"
+      
+      export COSIGN_PASSWORD=$(vault kv get -field=password kv-gitlab-ci/node/build/cosign/)
+      export COSIGN_PRIVATE=$(vault kv get -field=private_key kv-gitlab-ci/node/build/cosign/)
+      
+      docker pull -q ${IMAGE}
+      export IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE)
+      export IMAGE_URI=$(echo $IMAGE_DIGEST | sed -e 's/\@sha256:/:sha256-/')
+      
+      SBOM_SPDX="${CI_PROJECT_DIR}/sbom_${AIO_VERSION}_spdx.json"
+      syft -o spdx-json $IMAGE > $SBOM_SPDX
+
+      cosign attach sbom --sbom $SBOM_SPDX $IMAGE_DIGEST
+      cosign sign --yes --key env://COSIGN_PRIVATE "$IMAGE_URI.sbom"
+      cosign sign --recursive --yes --key env://COSIGN_PRIVATE $IMAGE_DIGEST
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - $CI_PROJECT_DIR/*.json

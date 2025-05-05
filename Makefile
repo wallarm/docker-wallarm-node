@@ -1,0 +1,57 @@
+-include .env
+
+# Repo version pins
+.EXPORT_ALL_VARIABLES:
+
+AIO_VERSION       ?= 6.0.2
+
+ALPINE_VERSION    = 3.20
+NGINX_VERSION     = 1.26.3
+GOMPLATE_VERISON  = 3.11.7
+COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
+
+REGISTRY		?= $(CI_REGISTRY_IMAGE)
+IMAGE_NAME		?= node
+IMAGE			?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+PUBLIC_REGISTRY ?= docker.io/wallarm/$(IMAGE_NAME)
+IMAGE_TAG		= $(AIO_VERSION)
+DOCKERFILE		?= Dockerfile
+
+SKIP_AIO_DOWNLOAD ?= false
+BUILDX_ARGS = --push
+
+ARCH ?= x86_64
+
+DOCKER_ARCH ?= amd64
+ifeq ($(ARCH),aarch64)
+	DOCKER_ARCH := arm64
+endif
+
+DOCKER_SCOUT_ARGS ?= ""
+
+PYTEST_WORKERS 	?= 10
+PYTEST_PARAMS 	?= --allure-features=Node
+
+.PHONY: docker-image-build docker-scout-scan docker-push docker-sign smoke-test single split
+
+docker-image-build:
+	echo ${X_CI_BUILD_KIND}
+
+	build-scripts/docker_build.sh
+	@echo "IMAGE: ${IMAGE}"
+
+docker-scout-scan:
+	docker-scout cves "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}" $(DOCKER_SCOUT_ARGS)
+
+docker-push:
+	docker buildx imagetools create -t ${PUBLIC_REGISTRY}:${AIO_VERSION} ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}
+
+	# Will be fixed after NODE-6066
+	if [ "$(X_CI_BUILD_KIND)" = "production" ] && ! echo "$(CI_COMMIT_TAG)" | grep -q '^sv-'; then \
+		docker buildx imagetools create -t ${PUBLIC_REGISTRY}:latest ${PUBLIC_REGISTRY}:${AIO_VERSION}; \
+	fi
+
+smoke-test: single split
+
+single split:
+	test/smoke_test.sh $@

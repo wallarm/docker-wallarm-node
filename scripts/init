@@ -1,0 +1,148 @@
+#!/bin/bash
+
+register_node() {
+  args="job:register"
+
+  WALLARM_API_USE_SSL="${WALLARM_API_USE_SSL:-true}"
+  WALLARM_API_CA_VERIFY="${WALLARM_API_CA_VERIFY:-true}"
+
+  if [ -n "$WALLARM_API_HOST" ]; then
+    args="$args -host=$WALLARM_API_HOST"
+  fi
+
+  if [ -n "$WALLARM_API_PORT" ]; then
+    args="$args -port=$WALLARM_API_PORT"
+  fi
+
+  if [ x"$WALLARM_API_USE_SSL" = x"false" ] \
+     || [ x"$WALLARM_API_USE_SSL" = x"False" ] \
+     || [ x"$WALLARM_API_USE_SSL" = x"no" ]
+  then
+    args="$args -ssl=false"
+  fi
+
+  if [ x"$WALLARM_API_CA_VERIFY" = x"false" ] \
+     || [ x"$WALLARM_API_CA_VERIFY" = x"False" ] \
+     || [ x"$WALLARM_API_CA_VERIFY" = x"no" ]
+  then
+    args="$args -ssl-verify=false"
+  fi
+
+  if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
+  then
+    args="$args -mode=post_analytic"
+  fi
+
+  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
+    args="$args -mode=filtering"
+  fi
+
+  if [ -e /opt/wallarm/etc/wallarm/node.yaml ] \
+     && [ -s /opt/wallarm/etc/wallarm/node.yaml ]
+  then
+    echo "Node registration skipped - node.yaml already exists"
+  else
+    /opt/wallarm/register-node \
+      $args
+  fi
+}
+
+configure_nginx() {
+  read -r NGX_CONF_FIRST < /etc/nginx/nginx.conf
+  if [ "$NGX_CONF_FIRST" = "### Wallarm default ###" ] \
+    || [ -n "$RENDER_STATUS_PAGE" ]; then
+    echo "Rendering status page..."
+    gomplate -f /opt/wallarm/wallarm-status.conf.tmpl > /etc/nginx/conf.d/wallarm-status.conf
+  else
+    echo "Custom nginx.conf (probably mounted dir), please handle status page manually"
+  fi
+
+  if [ -n "$NGINX_EXTERNAL_CONFIG" ]; then
+     return 0
+  fi
+
+  if [ x"${WALLARM_NGINX_LOG_TO_FILES}" != x"true" ]
+  then
+    ln -sf /dev/stdout /var/log/nginx/access.log
+    ln -sf /dev/stderr /var/log/nginx/error.log
+  fi
+
+  [ -n "$NGINX_BACKEND" ] || return 0
+
+  echo "Rendering nginx default config..."
+  gomplate -f /opt/wallarm/default.conf.tmpl > /etc/nginx/http.d/default.conf
+}
+
+configure_services() {
+  if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
+    || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
+  then
+    mv /opt/wallarm/etc/supervisord.conf.postanalytics /opt/wallarm/etc/supervisord.conf
+  fi
+
+  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
+    mv /opt/wallarm/etc/supervisord.conf.filtering /opt/wallarm/etc/supervisord.conf
+  fi
+
+  if [ x"$WALLARM_APIFW_ENABLE" = x"false" ] \
+    || [ x"$WALLARM_APIFW_ENABLE" = x"False" ]
+  then
+    sed -i -e '/\[program:api-firewall\]/,/\/api-firewall-out.log/d' \
+      /opt/wallarm/etc/supervisord.conf
+    sed -i -e '/wallarm-apifw-loc/d' \
+      /etc/nginx/nginx.conf
+  fi
+}
+
+if [ "${1}" = "--source-only" ]
+then
+  return
+fi
+
+if [ x"$WALLARM_FALLBACK" = x"false" ]
+then
+  set -e
+fi
+
+if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
+  if [ -n "$TARANTOOL_MEMORY_GB" ]; then
+    SLAB_ALLOC_ARENA=$TARANTOOL_MEMORY_GB
+    export SLAB_ALLOC_ARENA
+  fi
+fi
+
+if [ -n "$POSTANALYTIC_ADDRESS" ] && [ -n "$POSTANALYTIC_ONLY" ]; then
+  echo "ERROR: noooo you can't just set postanalytic and filtering type at the same time..."
+
+  exit 1
+fi
+
+if [ -z "$WALLARM_API_TOKEN" ]; then
+  if [ ! -f "/opt/wallarm/etc/wallarm/private.key" ]; then
+    echo "ERROR: no WALLARM_API_TOKEN and no private key in /etc/wallarm/private.key" >&2
+    exit 1
+  fi
+fi
+
+# Propagate env vars to supervisor
+set -a && source /opt/wallarm/env.list && set +a
+
+printenv >> /etc/environment
+configure_services
+#taken from https://unix.stackexchange.com/a/71511
+{ register_node |& tee /dev/fd/3 | grep -q 'label "group" is required for this registration type' && exit; } 3>&1
+configure_nginx
+
+if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
+  || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
+  || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
+then
+  exec /opt/wallarm/usr/bin/python3.10 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf
+else
+  /opt/wallarm/usr/bin/python3.10 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf &
+  sleep 1
+  exec /usr/sbin/nginx -g "daemon off;"
+fi
