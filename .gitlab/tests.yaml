@@ -78,7 +78,7 @@ TEST_REGISTER_NODE:
   script:
     - export ALLURE_PROJECT_ID=3
     - cd libs/go/wallarm-common-ng/
-    - make test-functional-ci
+    - make test-functional
 
 SMOKE_TESTS_DOCKER_AIO:
   stage: test
