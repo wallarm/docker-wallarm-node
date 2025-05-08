@@ -137,22 +137,6 @@ LOAD_TEST:
     branch: main
   allow_failure: true
 
-LOAD_TEST_CHECK:
-  stage: test
-  variables:
-    OVERLOAD_COMPARE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
-  rules:
-    - if: $X_CI_BUILD_KIND == "develop"
-      when: manual
-    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
-  script:
-    - |
-      echo "Testing token against downstream project"
-      curl --header "JOB-TOKEN:$CI_JOB_TOKEN" \
-           --silent --output /dev/null --write-out "%{http_code}\n" \
-           "$CI_API_V4_URL/projects/$(urlencode tests/performance/overload)"
-  allow_failure: true
-
 RUN_COMPARATOR:
   stage: test
   variables:
