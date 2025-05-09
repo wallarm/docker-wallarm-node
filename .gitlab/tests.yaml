@@ -56,7 +56,6 @@ TEST_REGISTER_NODE:
   image: "dkr.wallarm.com/wallarm-node/meganode/register-tests"
   stage: test
   variables:
-    GIT_STRATEGY: none
     NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
     ALLURE_PROJECT_ID: 3
     ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_JOB_ID}"
@@ -66,19 +65,11 @@ TEST_REGISTER_NODE:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   before_script:
     - !reference [.before-git-checkout, before_script]
-    - AIO_REPOSITORY_URL="https://${GITLAB_TOKEN_NAME}:${GITLAB_TOKEN}@${GITLAB_HOST}/wallarm-node/meganode.git"
-    - git init .
-    - git remote add origin $AIO_REPOSITORY_URL
-    - git sparse-checkout set libs/go/wallarm-common-ng
-    - git fetch origin --tags $UPSTREAM_CI_COMMIT_REF_NAME
-    - git checkout $UPSTREAM_CI_COMMIT_REF_NAME
     - *x_get_allure_token
     - *x_script_docker_login
     - docker pull ${NODE_DOCKER_IMAGE}
   script:
-    - export ALLURE_PROJECT_ID=3
-    - cd libs/go/wallarm-common-ng/
-    - make test-functional
+    - make test-register-node-ci
 
 SMOKE_TESTS_DOCKER_AIO:
   stage: test

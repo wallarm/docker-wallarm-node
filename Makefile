@@ -32,7 +32,7 @@ DOCKER_SCOUT_ARGS ?= ""
 PYTEST_WORKERS 	?= 10
 PYTEST_PARAMS 	?= --allure-features=Node
 
-.PHONY: docker-image-build docker-scout-scan docker-push docker-sign smoke-test single split
+.PHONY: docker-image-build docker-scout-scan docker-push docker-sign smoke-test single split test-register-node-ci test-register-node-local
 
 docker-image-build:
 	echo ${X_CI_BUILD_KIND}
@@ -55,3 +55,15 @@ smoke-test: single split
 
 single split:
 	test/smoke_test.sh $@
+
+test-register-node-ci:
+	cd test/register_node/ ; \
+	export ALLURE_LAUNCH_ID=$(allurectl launch create --format "ID" --no-header) ; \
+	allurectl watch --results ./cmd/allure-results -- \
+	go test -count=1 ./cmd/... -tags functional
+
+test-register-node-local:
+	cd test/register_node/ ; \
+	rm -rf ./cmd/allure-results/ ; \
+	go test -count=1 ./cmd/... -tags functional ; \
+	allure serve ./cmd/allure-results/ -p 1234 -h 127.0.0.1
