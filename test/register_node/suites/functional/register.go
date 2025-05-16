@@ -5,6 +5,7 @@ package functional
 import (
 	"context"
 	"io"
+	"regexp"
 	"strings"
 	"time"
 
@@ -49,6 +50,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 		Subscription:   "INVALID",
 		ApiHost:        "audit.api.wallarm.com",
 		ExpectFail:     false,
+		ExpectedError:  "illegal base64",
 	}
 	testCases["Register Node with api_token no group"] = shared.RegisterNodeCases{
 		Token:          testSuite.tokens["AAS"]["api_token"],
@@ -57,6 +59,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 		Subscription:   "AAS",
 		ApiHost:        "audit.api.wallarm.com",
 		ExpectFail:     false,
+		ExpectedError:  "label \\\"group\\\" is required",
 	}
 	testCases["Register Node with NFR wrong host"] = shared.RegisterNodeCases{
 		Token:          testSuite.tokens["NFR"]["node_token"],
@@ -65,6 +68,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 		Subscription:   "NFR",
 		ApiHost:        "docs.wallarm.com",
 		ExpectFail:     false,
+		ExpectedError:  "request []: not found",
 	}
 	testCases["Register Node with no token"] = shared.RegisterNodeCases{
 		Token:          "",
@@ -73,6 +77,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 		Subscription:   "NFR",
 		ApiHost:        "audit.api.wallarm.com",
 		ExpectFail:     true,
+		ExpectedError:  "no private key",
 	}
 	testCases["Register Node with token from other host"] = shared.RegisterNodeCases{
 		Token:          testSuite.tokens["NFR"]["node_token"],
@@ -81,6 +86,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 		Subscription:   "NFR",
 		ApiHost:        "api.wallarm.com",
 		ExpectFail:     false,
+		ExpectedError:  "access denied",
 	}
 
 	for caseName, params := range testCases {
@@ -97,6 +103,8 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 				resp        container.CreateResponse
 				ReqInterval = 2 * time.Second
 				ReqTimeout  = 80 * time.Second
+				re          *regexp.Regexp
+				errors      []string
 			)
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -157,6 +165,14 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 			stepCtx.WithNewAttachment("Container logs", "text/plain", logs)
 			stepCtx.Require().True(success, "Error waiting node to be in the expected condition")
 			stepCtx.Require().Contains(strLogs, paramsTest.ExpectedResult, "Error getting expected message: '%v' in log", paramsTest.ExpectedResult)
+
+			// Check if there are any unexpected errors in the logs
+			re = regexp.MustCompile(`level\":\"error.*\n`)
+			errors = re.FindAllString(strLogs, -1)
+
+			for _, logError := range errors {
+				stepCtx.Require().Contains(logError, paramsTest.ExpectedError, "Error should match the expected: '%v'", logError)
+			}
 		})
 	}
 }
@@ -172,6 +188,7 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 		envVars         []string
 		out             io.ReadCloser
 		logs            []byte
+		strLogs         string
 		success         bool
 		exec            types.IDResponse
 		execInspect     container.ExecInspect
@@ -180,6 +197,8 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 		ReqTimeout      = 80 * time.Second
 		execLog         types.HijackedResponse
 		expectedMessage = "node unregistration done"
+		re		        *regexp.Regexp
+		errors   	    []string
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -245,18 +264,19 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 			return false, nil
 		}
 		logs, err = io.ReadAll(out)
+		strLogs = string(logs[:])
+
 		if err != nil {
 			t.Logf("Failed to read container logs: %v", err)
 			return false, nil
 		}
-		if strings.Contains(string(logs[:]), expectedMessage) {
+		if strings.Contains(strLogs, expectedMessage) {
 			return true, nil
 		}
 		return false, nil
 	})
 
 	t.WithNewAttachment("wcli.log", "text/plain", logs)
-	t.Require().True(success, "Error getting expected message: '%v' in log", expectedMessage)
 
 	t.WithNewStep("Delete container", func(subStepCtx provider.StepCtx) {
 		ctxNew := context.Background()
@@ -265,4 +285,10 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 				ctxNew, resp.ID, container.RemoveOptions{RemoveVolumes: true, Force: true}),
 				"Error stopping image")
 	})
+	t.Require().True(success, "Error getting expected message: '%v' in log", expectedMessage)
+
+	// Check if there are any errors in the logs
+	re = regexp.MustCompile(`level\":\"error.*\n`)
+	errors = re.FindAllString(strLogs, -1)
+	t.Require().Empty(errors, "There are errors in the logs. See attachment for details")
 }

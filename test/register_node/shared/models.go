@@ -9,4 +9,5 @@ type RegisterNodeCases struct {
 	Subscription   string
 	ApiHost        string
 	ExpectFail     bool
+	ExpectedError  string
 }
