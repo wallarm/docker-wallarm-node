@@ -3,7 +3,7 @@
 # Repo version pins
 .EXPORT_ALL_VARIABLES:
 
-AIO_VERSION       ?= 6.0.2
+AIO_VERSION       ?= 6.1.0
 
 ALPINE_VERSION    = 3.20
 NGINX_VERSION     = 1.26.3
@@ -12,9 +12,9 @@ COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
 REGISTRY		?= $(CI_REGISTRY_IMAGE)
 IMAGE_NAME		?= node
+IMAGE_TAG		?= $(shell git rev-parse --short HEAD)
 IMAGE			?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 PUBLIC_REGISTRY ?= docker.io/wallarm/$(IMAGE_NAME)
-IMAGE_TAG		= $(AIO_VERSION)
 DOCKERFILE		?= Dockerfile
 
 SKIP_AIO_DOWNLOAD ?= false
