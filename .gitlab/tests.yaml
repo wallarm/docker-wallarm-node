@@ -56,7 +56,7 @@ TEST_REGISTER_NODE:
   image: "dkr.wallarm.com/wallarm-node/meganode/register-tests"
   stage: test
   variables:
-    NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+    NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
     ALLURE_PROJECT_ID: 3
     ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_JOB_ID}"
     ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
@@ -75,23 +75,25 @@ SMOKE_TESTS_DOCKER_AIO:
   stage: test
   rules:
     - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
-      variables:
-        NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
   variables:
     PYTEST_PARAMS: "--allure-features=Node"
     TEST_NODE_DEPLOY_TARGET: "docker only"
+    NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
   trigger:
     strategy: depend
     project: tests/smoke-tests
     branch: master
+    forward:
+      pipeline_variables: true
+      yaml_variables: true
 
 SMOKE_TESTS_DOCKER_RELEASE:
   stage: test
   image: dkr.wallarm.com/devops/docker/github-runner-arc:v1.0.6-dind # the only multi-arch that has compose and everything we need
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
-      variables:
-        NODE_DOCKER_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+  variables:
+    NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
   before_script:
     - *x_get_api_creds
     - *x_get_allure
@@ -117,7 +119,7 @@ SMOKE_TESTS_DOCKER_RELEASE:
 LOAD_TEST:
   stage: test
   variables:
-    OVERLOAD_COMPARE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+    OVERLOAD_COMPARE: ${NODE_DOCKER_IMAGE}
   rules:
     - if: $X_CI_BUILD_KIND == "develop"
       when: manual
@@ -133,7 +135,7 @@ RUN_COMPARATOR:
   variables:
     DUMP_NUMBERS: "0 1 2 3 4 5"
     WALLARM_NODE1_IMAGE: "docker.io/wallarm/${IMAGE_NAME}:latest"
-    WALLARM_NODE2_IMAGE: "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}"
+    WALLARM_NODE2_IMAGE: ${NODE_DOCKER_IMAGE}
   rules:
     - if: $X_CI_BUILD_KIND == "develop"
       when: manual

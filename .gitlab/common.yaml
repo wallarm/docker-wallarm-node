@@ -1,3 +1,7 @@
+.x-export-image-name: &x_export_image_name
+  - echo "NODE_DOCKER_IMAGE=${NODE_DOCKER_IMAGE}" >> variables.env
+  - echo "IMAGE_TAG=${IMAGE_TAG}" >> variables.env
+
 .x-docker-login-private: &x_docker_login_private
   - | # GitLab Container Registry
     docker login "${CI_REGISTRY}" \
@@ -33,9 +37,10 @@
     export GITLAB_HOST=$(vault kv get -field=host kv-gitlab-ci/github/shared/versions-repo-creds)
     export GITLAB_REPO=$(vault kv get -field=repo kv-gitlab-ci/github/shared/versions-repo-creds)
 
-.private-registry-auth:
+.before-docker-build:
   before_script:
     - *x_docker_login_private
+    - *x_export_image_name
 
 
 .before-scout-scan:

@@ -10,10 +10,9 @@ NGINX_VERSION     = 1.26.3
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
-REGISTRY		?= $(CI_REGISTRY_IMAGE)
 IMAGE_NAME		?= node
 IMAGE_TAG		?= $(shell git rev-parse --short HEAD)
-IMAGE			?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+IMAGE			?= $(NODE_DOCKER_IMAGE)
 PUBLIC_REGISTRY ?= docker.io/wallarm/$(IMAGE_NAME)
 DOCKERFILE		?= Dockerfile
 
@@ -41,14 +40,14 @@ docker-image-build:
 	@echo "IMAGE: ${IMAGE}"
 
 docker-scout-scan:
-	docker-scout cves "${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}" $(DOCKER_SCOUT_ARGS)
+	docker-scout cves "${NODE_DOCKER_IMAGE}" $(DOCKER_SCOUT_ARGS)
 
 docker-push:
-	docker buildx imagetools create -t ${PUBLIC_REGISTRY}:${AIO_VERSION} ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${AIO_VERSION}
+	docker buildx imagetools create -t ${PUBLIC_REGISTRY}:${IMAGE_TAG} ${NODE_DOCKER_IMAGE}
 
 	# Will be fixed after NODE-6066
 	if [ "$(X_CI_BUILD_KIND)" = "production" ] && ! echo "$(CI_COMMIT_TAG)" | grep -q '^sv-'; then \
-		docker buildx imagetools create -t ${PUBLIC_REGISTRY}:latest ${PUBLIC_REGISTRY}:${AIO_VERSION}; \
+		docker buildx imagetools create -t ${PUBLIC_REGISTRY}:latest ${PUBLIC_REGISTRY}:${IMAGE_TAG}; \
 	fi
 
 smoke-test: single split

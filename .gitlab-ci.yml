@@ -32,7 +32,10 @@ workflow:
     - if: $CI_COMMIT_TAG =~ /^([0-9]+\.[0-9]+\.[0-9]+).*$/
       variables:
         X_CI_BUILD_KIND: production
+        IMAGE_TAG: $CI_COMMIT_TAG
     - if: $CI_PIPELINE_SOURCE == "pipeline"
+      variables:
+        IMAGE_TAG: $AIO_VERSION
       when: always
     - if: '$CI_MERGE_REQUEST_ID'
       when: always
@@ -47,12 +50,12 @@ BUILD_AIO_DOCKER_UPSTREAM:
   stage: build
   tags: [infra-c4r8-dind-amd]
   extends:
-    - .private-registry-auth
+    - .before-docker-build
   rules:
     - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE == "pipeline"'
   variables:
     SKIP_AIO_DOWNLOAD: true
-    IMAGE_TAG: $AIO_VERSION
+    NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
   script:
     - echo $UPSTREAM_CI_PIPELINE_REF_NAME
     - echo $UPSTREAM_CI_COMMIT_REF_NAME
@@ -72,16 +75,25 @@ BUILD_AIO_DOCKER_UPSTREAM:
       ref: $UPSTREAM_CI_PIPELINE_REF_NAME
       job: 'BUILD_MEGANODE: [aarch64, infra-c6r12-dind-arm, musl]'
       artifacts: true
+  artifacts:
+    reports:
+      dotenv: variables.env
 
 BUILD_AIO_DOCKER:
   stage: build
   tags: [infra-c4r8-dind-amd]
+  variables:
+    IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+    NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
   extends:
-    - .private-registry-auth
+    - .before-docker-build
   rules:
     - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
   script:
     - make docker-image-build
+  artifacts:
+    reports:
+      dotenv: variables.env
 
 # Vulnerability scan with report
 
@@ -118,6 +130,10 @@ SIGN_DOCKER:
   stage: publish
   needs:
     - job: PUSH_DOCKER
+    - job: BUILD_AIO_DOCKER_UPSTREAM
+      optional: true
+    - job: BUILD_AIO_DOCKER
+      optional: true
   tags: [infra-c1r2-dind-amd]
   rules:
     - if: $X_CI_BUILD_KIND == "production"
@@ -125,7 +141,7 @@ SIGN_DOCKER:
     - .before-sign-docker
   script:
     - |
-      export IMAGE="docker.io/wallarm/${IMAGE_NAME}:${AIO_VERSION}"
+      export IMAGE="docker.io/wallarm/${IMAGE_NAME}:${IMAGE_TAG}"
       
       export COSIGN_PASSWORD=$(vault kv get -field=password kv-gitlab-ci/node/build/cosign/)
       export COSIGN_PRIVATE=$(vault kv get -field=private_key kv-gitlab-ci/node/build/cosign/)
@@ -134,7 +150,7 @@ SIGN_DOCKER:
       export IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE)
       export IMAGE_URI=$(echo $IMAGE_DIGEST | sed -e 's/\@sha256:/:sha256-/')
       
-      SBOM_SPDX="${CI_PROJECT_DIR}/sbom_${AIO_VERSION}_spdx.json"
+      SBOM_SPDX="${CI_PROJECT_DIR}/sbom_${IMAGE_TAG}_spdx.json"
       syft -o spdx-json $IMAGE > $SBOM_SPDX
 
       cosign attach sbom --sbom $SBOM_SPDX $IMAGE_DIGEST
