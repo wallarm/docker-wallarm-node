@@ -58,3 +58,8 @@
   before_script:
     - *x_vault_login
     - *x_get_credentials
+
+.before-update-versions:
+  before_script:
+    - *x_vault_login
+    - *x_get_credentials

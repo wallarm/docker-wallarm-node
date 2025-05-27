@@ -160,3 +160,63 @@ SIGN_DOCKER:
     expire_in: 30 days
     paths:
       - $CI_PROJECT_DIR/*.json
+
+
+UPDATE_VERSION:
+  stage: publish
+  needs:
+    - job: SIGN_DOCKER
+  rules:
+    - if: $X_CI_BUILD_KIND == "production"
+  extends:
+    - .before-update-versions
+  script:
+    - |
+      COMPONENT_VERSION=$AIO_VERSION
+
+      PR_BRANCH="update/aio-docker/${COMPONENT_VERSION}"
+      GITLAB_REPO_URL="https://${GITLAB_TOKEN_NAME}:${GITLAB_TOKEN}@${GITLAB_HOST}/${GITLAB_REPO}"
+
+      git clone ${GITLAB_REPO_URL}
+      cd packages_versions
+      git checkout -b ${PR_BRANCH}
+      git config --local user.name 'project_808_bot'
+      git config --local user.email 'project808_bot@noreply.${GITLAB_HOST}'
+      cd packages_versions
+
+      COMPONENT_NAME=wallarm-nginx-docker
+      jq '.body."'"$COMPONENT_NAME"'" += ["'"$COMPONENT_VERSION"'"]' latest.json > latest.new.json
+      VERSIONS=$(jq '.body."'"$COMPONENT_NAME"'" | sort_by( split("[^0-9]+") | map(tonumber? // 0) )' latest.new.json)
+      jq --argjson versions "$VERSIONS" '.body["'"$COMPONENT_NAME"'"] = $versions' latest.new.json > latest.json
+      git add latest.json
+      COMMIT_MESSAGE="Bump ${COMPONENT_NAME} version to ${COMPONENT_VERSION}"
+      git commit -m "${COMMIT_MESSAGE}"
+
+      git push ${GITLAB_REPO_URL} ${PR_BRANCH}
+
+      glab auth login --hostname ${GITLAB_HOST} --token ${GITLAB_TOKEN}
+
+      echo "Creating merge request ..."
+      glab mr create \
+        --fill \
+        --yes \
+        --label meganode \
+        --source-branch ${PR_BRANCH} \
+        --repo https://${GITLAB_HOST}/${GITLAB_REPO}
+
+      echo "Approving merge request ..."
+      glab mr approve \
+        ${PR_BRANCH} \
+        --repo https://${GITLAB_HOST}/${GITLAB_REPO}
+
+      # Sometimes merging is failed without delay
+      echo "Sleep ..."
+      sleep 20
+
+      echo "Merging ..."
+      glab mr merge \
+        ${PR_BRANCH} \
+        --yes \
+        --remove-source-branch \
+        --when-pipeline-succeeds=false \
+        --repo https://${GITLAB_HOST}/${GITLAB_REPO}
