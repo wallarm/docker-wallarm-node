@@ -18,7 +18,7 @@ variables:
       - "compat only"
       - "no"
   WALLARM_API_PRESET:
-    value: "us1"
+    value: "eu1"
     description: "Cloud to deploy the node on"
     options:
       - "eu1"
