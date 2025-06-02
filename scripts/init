@@ -50,6 +50,11 @@ register_node() {
 }
 
 configure_nginx() {
+
+  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
+    sed -i "/upstream wallarm_wstore {/,/}/s/server localhost/server ${POSTANALYTIC_ADDRESS}/" /etc/nginx/nginx.conf
+  fi
+
   read -r NGX_CONF_FIRST < /etc/nginx/nginx.conf
   if [ "$NGX_CONF_FIRST" = "### Wallarm default ###" ] \
     || [ -n "$RENDER_STATUS_PAGE" ]; then
@@ -81,6 +86,8 @@ configure_services() {
     || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
   then
     mv /opt/wallarm/etc/supervisord.conf.postanalytics /opt/wallarm/etc/supervisord.conf
+    sed -i -e "s|localhost:3313|\":3313\"|g"  /opt/wallarm/wstore/wstore.yaml
+    sed -i -e "s|localhost:6388|\":6388\"|g"  /opt/wallarm/wstore/wstore.yaml
   fi
 
   if [ -n "$POSTANALYTIC_ADDRESS" ]; then

@@ -16,4 +16,3 @@ sed -i -E \
     -e '/SLAB_ALLOC_ARENA/d' \
     "$BUILD_DIR/opt/wallarm/env.list"
 
-cat conf/supervisord.conf.socat >> "$BUILD_DIR/opt/wallarm/etc/supervisord.conf.filtering"

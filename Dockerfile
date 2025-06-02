@@ -28,7 +28,7 @@ RUN addgroup -S wallarm && \
     adduser -S -D -G wallarm -h /opt/wallarm wallarm && \
     apk update && \
     apk upgrade && \
-    apk add curl bash socat logrotate libgcc binutils upx \
+    apk add curl bash logrotate libgcc binutils upx \
         grep \
         nginx=~$NGINX_VERSION \
         nginx-mod-http-perl=~$NGINX_VERSION \
