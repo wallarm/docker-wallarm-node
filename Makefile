@@ -3,13 +3,14 @@
 # Repo version pins
 .EXPORT_ALL_VARIABLES:
 
-AIO_VERSION       ?= 6.1.0
+AIO_VERSION       ?= 6.2.0-rc1
 
 ALPINE_VERSION    = 3.20
 NGINX_VERSION     = 1.26.3
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
+NODE_DOCKER_IMAGE	?= node:test
 IMAGE_NAME		?= node
 IMAGE_TAG		?= $(shell git rev-parse --short HEAD)
 IMAGE			?= $(NODE_DOCKER_IMAGE)

@@ -28,6 +28,8 @@ function get_logs() {
     [[ -d ${LOGS_DIR}/${CONTAINER_NAME} ]] || mkdir -p ${LOGS_DIR}/${CONTAINER_NAME}
 
     eval "$COMPOSE_CMD cp $CONTAINER_NAME:/opt/wallarm/var/log/wallarm/ ${LOGS_DIR}/$CONTAINER_NAME"
+    eval "$COMPOSE_CMD cp $CONTAINER_NAME:/opt/wallarm/wstore/ ${LOGS_DIR}/$CONTAINER_NAME"
+
     eval "$COMPOSE_CMD logs --no-color $CONTAINER_NAME > ${LOGS_DIR}/$CONTAINER_NAME/$CONTAINER_NAME.log"
 }
 

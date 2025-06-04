@@ -113,6 +113,7 @@ SMOKE_TESTS_DOCKER_RELEASE:
   tags:
     - ${RUNNER}
   artifacts:
+    when: always
     paths:
       - node-logs-*.tar.gz
 
