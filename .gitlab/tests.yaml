@@ -53,11 +53,10 @@ variables:
 
 TEST_REGISTER_NODE:
   tags: [infra-c05r1-dind-amd]
-  image: "dkr.wallarm.com/wallarm-node/meganode/register-tests"
+  image: dkr.wallarm.com/wallarm-node/meganode/register-tests:latest
   stage: test
   variables:
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
-    ALLURE_PROJECT_ID: 3
     ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_JOB_ID}"
     ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
   rules:
@@ -67,7 +66,7 @@ TEST_REGISTER_NODE:
     - !reference [.before-git-checkout, before_script]
     - *x_get_allure_token
     - *x_script_docker_login
-    - docker pull ${NODE_DOCKER_IMAGE}
+    - docker pull -q ${NODE_DOCKER_IMAGE}
   script:
     - make test-register-node-ci
 
