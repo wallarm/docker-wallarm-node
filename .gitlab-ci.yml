@@ -4,7 +4,7 @@ include:
 
 default:
   image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/devops/docker/gitlab-runner/gitlab-runner:v1.11.6
-  tags: [infra-c05r1-amd]
+  tags: [node-c05r1-stable-amd]
 
 stages:
   - build
@@ -48,7 +48,7 @@ workflow:
 
 BUILD_AIO_DOCKER_UPSTREAM:
   stage: build
-  tags: [infra-c4r8-dind-amd]
+  tags: [node-c4r8-stable-dind-amd]
   extends:
     - .before-docker-build
   rules:
@@ -69,11 +69,11 @@ BUILD_AIO_DOCKER_UPSTREAM:
   needs:
     - project: wallarm-node/meganode
       ref: $UPSTREAM_CI_PIPELINE_REF_NAME
-      job: 'BUILD_MEGANODE: [x86_64, infra-c4r8-dind-amd, musl]'
+      job: 'BUILD_MEGANODE: [x86_64, node-c6r12-stable-dind-amd, musl]'
       artifacts: true
     - project: wallarm-node/meganode
       ref: $UPSTREAM_CI_PIPELINE_REF_NAME
-      job: 'BUILD_MEGANODE: [aarch64, infra-c6r12-dind-arm, musl]'
+      job: 'BUILD_MEGANODE: [aarch64, node-c6r12-stable-dind-arm, musl]'
       artifacts: true
   artifacts:
     reports:
@@ -81,7 +81,7 @@ BUILD_AIO_DOCKER_UPSTREAM:
 
 BUILD_AIO_DOCKER:
   stage: build
-  tags: [infra-c4r8-dind-amd]
+  tags: [node-c4r8-stable-dind-amd]
   variables:
     IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -134,7 +134,6 @@ SIGN_DOCKER:
       optional: true
     - job: BUILD_AIO_DOCKER
       optional: true
-  tags: [infra-c1r2-dind-amd]
   rules:
     - if: $X_CI_BUILD_KIND == "production"
   extends:

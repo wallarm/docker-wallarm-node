@@ -52,7 +52,7 @@ variables:
   - export ALLURE_TOKEN=$(vault kv get -field=allure_server_token kv-gitlab-ci/github/ingress)
 
 TEST_REGISTER_NODE:
-  tags: [infra-c05r1-dind-amd]
+  tags: [node-c2r4-stable-dind-amd]
   image: dkr.wallarm.com/wallarm-node/meganode/register-tests:latest
   stage: test
   variables:
@@ -104,10 +104,10 @@ SMOKE_TESTS_DOCKER_RELEASE:
   parallel:
     matrix:
       - ARCH: x86_64
-        RUNNER: infra-c2r4-dind-amd
+        RUNNER: node-c2r4-stable-dind-amd
         CASE: [ single, split ]
       - ARCH: aarch64
-        RUNNER: infra-c2r4-dind-arm
+        RUNNER: node-c2r4-stable-dind-arm
         CASE: [ single, split ]
   tags:
     - ${RUNNER}
