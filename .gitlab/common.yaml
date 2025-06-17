@@ -19,7 +19,8 @@
         -p "${X_CREDS_DOCKERHUB_WALLARMCICD_PASSWORD}"
 
 .x-vault-login: &x_vault_login
-  - | # login to vault.wallarm.com
+  - |
+    export VAULT_ADDR=https://vault-common.i.gcp.wallarm.space
     vault write -field=token \
     auth/kubernetes/login \
     role=gitlab-runner \
@@ -32,10 +33,10 @@
 
 .x-get-credentials: &x_get_credentials
   - |
-    export GITLAB_TOKEN=$(vault kv get -field=token_secret kv-gitlab-ci/github/shared/versions-repo-creds)
-    export GITLAB_TOKEN_NAME=$(vault kv get -field=token_name kv-gitlab-ci/github/shared/versions-repo-creds)
-    export GITLAB_HOST=$(vault kv get -field=host kv-gitlab-ci/github/shared/versions-repo-creds)
-    export GITLAB_REPO=$(vault kv get -field=repo kv-gitlab-ci/github/shared/versions-repo-creds)
+    export GITLAB_TOKEN=$(vault kv get -field=token_secret -mount="node-team" pipelines/gl_version_repo_creds)
+    export GITLAB_TOKEN_NAME=$(vault kv get -field=token_name -mount="node-team" pipelines/gl_version_repo_creds)
+    export GITLAB_HOST=$(vault kv get -field=host -mount="node-team" pipelines/gl_version_repo_creds)
+    export GITLAB_REPO=$(vault kv get -field=repo -mount="node-team" pipelines/gl_version_repo_creds)
 
 .before-docker-build:
   before_script:

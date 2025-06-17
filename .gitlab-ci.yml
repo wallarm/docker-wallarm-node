@@ -14,7 +14,7 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  VAULT_ADDR: https://vault.wallarm.com
+  VAULT_ADDR: https://vault-common.i.gcp.wallarm.space
   IMAGE_NAME: node
   UPSTREAM_CI_COMMIT_REF_NAME: main
   AIO_VERSION:
@@ -142,8 +142,8 @@ SIGN_DOCKER:
     - |
       export IMAGE="docker.io/wallarm/${IMAGE_NAME}:${IMAGE_TAG}"
       
-      export COSIGN_PASSWORD=$(vault kv get -field=password kv-gitlab-ci/node/build/cosign/)
-      export COSIGN_PRIVATE=$(vault kv get -field=private_key kv-gitlab-ci/node/build/cosign/)
+      export COSIGN_PASSWORD=$(vault kv get -field=password -mount="node-team" pipelines/cosign)
+      export COSIGN_PRIVATE=$(vault kv get -field=private_key -mount="node-team" pipelines/cosign)
       
       docker pull -q ${IMAGE}
       export IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE)
