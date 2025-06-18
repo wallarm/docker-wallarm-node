@@ -5,8 +5,8 @@
 
 AIO_VERSION       ?= 6.2.0-rc1
 
-ALPINE_VERSION    = 3.20
-NGINX_VERSION     = 1.26.3
+ALPINE_VERSION    = 3.22
+NGINX_VERSION     = 1.28.0
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
 
