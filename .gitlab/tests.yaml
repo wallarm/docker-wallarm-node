@@ -36,12 +36,12 @@ variables:
 
 .x-get-api-creds: &x_get_api_creds
   - |
-    export WALLARM_API_HOST=$(yq -r '.eu1.host' ${X_SMOKE_TEST_PRESETS_FILE})
-    export WALLARM_API_TOKEN=$(yq -r '.eu1.user_token' ${X_SMOKE_TEST_PRESETS_FILE})
-    export CLIENT_ID=$(yq -r '.eu1.clientid' ${X_SMOKE_TEST_PRESETS_FILE})
-    export USER_TOKEN=$(yq -r '.eu1.user_token' ${X_SMOKE_TEST_PRESETS_FILE})
-    export WEBHOOK_UUID=$(yq -r '.eu1.webhook_uuid' ${X_SMOKE_TEST_PRESETS_FILE})
-    export WEBHOOK_API_KEY=$(yq -r '.eu1.webhook_api_key' ${X_SMOKE_TEST_PRESETS_FILE})
+    export WALLARM_API_HOST=$(vault kv get -field=api_host -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
+    export WALLARM_API_TOKEN=$(vault kv get -field=user_token -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
+    export CLIENT_ID=$(vault kv get -field=client_id -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
+    export USER_TOKEN=$(vault kv get -field=user_token -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
+    export WEBHOOK_UUID=$(vault kv get -field=webhook_uuid -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
+    export WEBHOOK_API_KEY=$(vault kv get -field=webhook_api_key -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
 
 .x-get-allure: &x_get_allure
   - |
@@ -49,10 +49,10 @@ variables:
     export ALLURE_PROJECT_ID=10
 
 .x-get-allure-token: &x_get_allure_token
-  - export ALLURE_TOKEN=$(vault kv get -field=allure_server_token kv-gitlab-ci/github/ingress)
+  - export ALLURE_TOKEN=$(vault kv get -field=allure_server_token -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
 
 TEST_REGISTER_NODE:
-  tags: [infra-c05r1-dind-amd]
+  tags: [node-c2r4-stable-dind-amd]
   image: dkr.wallarm.com/wallarm-node/meganode/register-tests:latest
   stage: test
   variables:
@@ -104,10 +104,10 @@ SMOKE_TESTS_DOCKER_RELEASE:
   parallel:
     matrix:
       - ARCH: x86_64
-        RUNNER: infra-c2r4-dind-amd
+        RUNNER: node-c2r4-stable-dind-amd
         CASE: [ single, split ]
       - ARCH: aarch64
-        RUNNER: infra-c2r4-dind-arm
+        RUNNER: node-c2r4-stable-dind-arm
         CASE: [ single, split ]
   tags:
     - ${RUNNER}
