@@ -120,6 +120,7 @@ LOAD_TEST:
   stage: test
   variables:
     OVERLOAD_COMPARE: ${NODE_DOCKER_IMAGE}
+    NODE_VERSION: ${IMAGE_TAG}
   rules:
     - if: $X_CI_BUILD_KIND == "develop"
       when: manual
