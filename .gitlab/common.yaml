@@ -20,11 +20,13 @@
 
 .x-vault-login: &x_vault_login
   - |
+    [ "$ARCH" = "aarch64" ] && VAULT_PATH=kubernetes-infra-ci || VAULT_PATH=kubernetes
     export VAULT_ADDR=https://vault-common.i.gcp.wallarm.space
     vault write -field=token \
-    auth/kubernetes/login \
-    role=gitlab-runner \
-    jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > ${HOME}/.vault-token
+        "auth/${VAULT_PATH}/login" \
+        role=gitlab-runner \
+        jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > ${HOME}/.vault-token
+    chmod 600 ~/.vault-token
 
 .x-tools-build-deps: &x-tools-build-deps
   - |
