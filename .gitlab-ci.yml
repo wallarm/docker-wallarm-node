@@ -14,7 +14,6 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  VAULT_ADDR: https://vault-common.i.gcp.wallarm.space
   IMAGE_NAME: node
   UPSTREAM_CI_COMMIT_REF_NAME: main
   AIO_VERSION:

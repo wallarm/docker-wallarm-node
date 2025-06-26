@@ -94,6 +94,7 @@ SMOKE_TESTS_DOCKER_RELEASE:
   variables:
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
   before_script:
+    - !reference [.x-vault-login]
     - *x_get_api_creds
     - *x_get_allure
     - *x_script_docker_login
