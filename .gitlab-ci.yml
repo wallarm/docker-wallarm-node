@@ -3,6 +3,9 @@ include:
   - local: .gitlab/tests.yaml
 
 default:
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://gl.wallarm.com
   image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/devops/docker/gitlab-runner/gitlab-runner:v1.11.6
   tags: [node-c05r1-stable-amd]
 
@@ -13,6 +16,9 @@ stages:
   - publish
 
 variables:
+  VAULT_SERVER_URL: https://vault-common.i.gcp.wallarm.space
+  VAULT_AUTH_ROLE: gitlab-ci_node-team_wallarm-node
+  VAULT_AUTH_PATH: jwt-gitlab
   GIT_SUBMODULE_STRATEGY: recursive
   IMAGE_NAME: node
   UPSTREAM_CI_COMMIT_REF_NAME: main
@@ -137,13 +143,13 @@ SIGN_DOCKER:
     - if: $X_CI_BUILD_KIND == "production"
   extends:
     - .before-sign-docker
+  secrets:
+    COSIGN_PASSWORD: {vault: "pipelines/cosign/password@node-team", file: false}
+    COSIGN_PRIVATE: {vault: "pipelines/cosign/private_key@node-team", file: false}
   script:
     - |
       export IMAGE="docker.io/wallarm/${IMAGE_NAME}:${IMAGE_TAG}"
-      
-      export COSIGN_PASSWORD=$(vault kv get -field=password -mount="node-team" pipelines/cosign)
-      export COSIGN_PRIVATE=$(vault kv get -field=private_key -mount="node-team" pipelines/cosign)
-      
+
       docker pull -q ${IMAGE}
       export IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE)
       export IMAGE_URI=$(echo $IMAGE_DIGEST | sed -e 's/\@sha256:/:sha256-/')
@@ -167,7 +173,7 @@ UPDATE_VERSION:
   rules:
     - if: $X_CI_BUILD_KIND == "production"
   extends:
-    - .before-update-versions
+    - .x-get-credentials
   script:
     - |
       COMPONENT_VERSION=$AIO_VERSION

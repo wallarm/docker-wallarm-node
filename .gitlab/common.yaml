@@ -18,27 +18,17 @@
         -u "${X_CREDS_DOCKERHUB_WALLARMCICD_USER}" \
         -p "${X_CREDS_DOCKERHUB_WALLARMCICD_PASSWORD}"
 
-.x-vault-login: &x_vault_login
-  - |
-    [ "$ARCH" = "aarch64" ] && VAULT_PATH=kubernetes-infra-ci || VAULT_PATH=kubernetes
-    export VAULT_ADDR=https://vault-common.i.gcp.wallarm.space
-    vault write -field=token \
-        "auth/${VAULT_PATH}/login" \
-        role=gitlab-runner \
-        jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) > ${HOME}/.vault-token
-    chmod 600 ~/.vault-token
-
 .x-tools-build-deps: &x-tools-build-deps
   - |
     apk update
     apk add bash make git tar curl
 
 .x-get-credentials: &x_get_credentials
-  - |
-    export GITLAB_TOKEN=$(vault kv get -field=token_secret -mount="node-team" pipelines/gl_version_repo_creds)
-    export GITLAB_TOKEN_NAME=$(vault kv get -field=token_name -mount="node-team" pipelines/gl_version_repo_creds)
-    export GITLAB_HOST=$(vault kv get -field=host -mount="node-team" pipelines/gl_version_repo_creds)
-    export GITLAB_REPO=$(vault kv get -field=repo -mount="node-team" pipelines/gl_version_repo_creds)
+  secrets:
+    GITLAB_TOKEN: {vault: "pipelines/gl_version_repo_creds/token_secret@node-team", file: false}
+    GITLAB_TOKEN_NAME: {vault: "pipelines/gl_version_repo_creds/token_name@node-team", file: false}
+    GITLAB_HOST: {vault: "pipelines/gl_version_repo_creds/host@node-team", file: false}
+    GITLAB_REPO: {vault: "pipelines/gl_version_repo_creds/repo@node-team", file: false}
 
 .before-docker-build:
   before_script:
@@ -54,15 +44,4 @@
 
 .before-sign-docker:
   before_script:
-    - *x_vault_login
     - *x_docker_login_public
-
-.before-git-checkout:
-  before_script:
-    - *x_vault_login
-    - *x_get_credentials
-
-.before-update-versions:
-  before_script:
-    - *x_vault_login
-    - *x_get_credentials
