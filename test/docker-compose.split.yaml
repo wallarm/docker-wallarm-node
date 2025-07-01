@@ -57,6 +57,10 @@ services:
       WEBHOOK_UUID: ${WEBHOOK_UUID}
       ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
       ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_PIPELINE_ID} ${ALLURE_ENVIRONMENT_ARCH}"
+      PYTEST_PROCESSES: ${PYTEST_PROCESSES:-7}
+      ALLURE_TESTPLAN_PATH: "./testplan.json"
+      RUN_TESTS_RC_FILE: "run_tests_rc"
+      DIST: "worksteal"
     entrypoint: '/bin/sleep'
     command:
       - infinity
