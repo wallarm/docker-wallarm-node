@@ -93,6 +93,7 @@ SMOKE_TESTS_DOCKER_RELEASE:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   variables:
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
+    ALLURE_UPLOAD_REPORT: "true"
   before_script:
     - !reference [.x-vault-login]
     - *x_get_api_creds
