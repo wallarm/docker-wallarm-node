@@ -35,21 +35,20 @@ variables:
   - docker login ${CI_DEPENDENCY_PROXY_SERVER} -u "${CI_DEPENDENCY_PROXY_USER}" -p "${CI_DEPENDENCY_PROXY_PASSWORD}"
 
 .x-get-api-creds: &x_get_api_creds
-  - |
-    export WALLARM_API_HOST=$(vault kv get -field=api_host -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
-    export WALLARM_API_TOKEN=$(vault kv get -field=user_token -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
-    export CLIENT_ID=$(vault kv get -field=client_id -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
-    export USER_TOKEN=$(vault kv get -field=user_token -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
-    export WEBHOOK_UUID=$(vault kv get -field=webhook_uuid -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
-    export WEBHOOK_API_KEY=$(vault kv get -field=webhook_api_key -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
+  variables:
+    CLIENT_ID: $CLIENT_ID_${WALLARM_API_PRESET} # because fetching as vault secret leads to masking all id-like numbers in logs
+  secrets:
+    WALLARM_API_HOST: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/api_host@node-team", file: false}
+    WALLARM_API_TOKEN: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/user_token@node-team", file: false}
+    USER_TOKEN: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/user_token@node-team", file: false}
+    WEBHOOK_UUID: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/webhook_uuid@node-team", file: false}
+    WEBHOOK_API_KEY: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/webhook_api_key@node-team", file: false}
 
 .x-get-allure: &x_get_allure
   - |
     export ALLURE_TOKEN=${ALLURE_TOKEN}
     export ALLURE_PROJECT_ID=10
 
-.x-get-allure-token: &x_get_allure_token
-  - export ALLURE_TOKEN=$(vault kv get -field=allure_server_token -mount="node-team" pipelines/common/smoke-test/${WALLARM_API_PRESET})
 
 TEST_REGISTER_NODE:
   tags: [node-c2r4-stable-dind-amd]
@@ -62,9 +61,11 @@ TEST_REGISTER_NODE:
   rules:
     - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  extends:
+    .x-get-credentials
+  secrets:
+    ALLURE_TOKEN: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/allure_server_token@node-team", file: false}
   before_script:
-    - !reference [.before-git-checkout, before_script]
-    - *x_get_allure_token
     - *x_script_docker_login
     - docker pull -q ${NODE_DOCKER_IMAGE}
   script:
@@ -94,9 +95,9 @@ SMOKE_TESTS_DOCKER_RELEASE:
   variables:
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
     ALLURE_UPLOAD_REPORT: "true"
+  extends:
+    .x-get-api-creds
   before_script:
-    - !reference [.x-vault-login]
-    - *x_get_api_creds
     - *x_get_allure
     - *x_script_docker_login
     - export IMAGE=$NODE_DOCKER_IMAGE
