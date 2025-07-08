@@ -133,6 +133,7 @@ PUSH_DOCKER:
 
 SIGN_DOCKER:
   stage: publish
+  tags: [node-c2r4-stable-dind-amd]
   needs:
     - job: PUSH_DOCKER
     - job: BUILD_AIO_DOCKER_UPSTREAM
