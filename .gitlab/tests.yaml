@@ -89,7 +89,7 @@ SMOKE_TESTS_DOCKER_AIO:
 
 SMOKE_TESTS_DOCKER_RELEASE:
   stage: test
-  image: dkr.wallarm.com/devops/docker/github-runner-arc:v1.0.6-dind # the only multi-arch that has compose and everything we need
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   variables:
