@@ -1,6 +1,7 @@
 include:
   - local: .gitlab/common.yaml
   - local: .gitlab/tests.yaml
+  - local: .gitlab/tests_build.yaml
 
 default:
   id_tokens:
@@ -31,6 +32,8 @@ variables:
     options:
       - develop
       - production
+      - release-candidate
+      - tools:register-tests
 
 workflow:
   rules:
