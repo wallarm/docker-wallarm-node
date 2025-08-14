@@ -28,9 +28,9 @@ func (testSuite *RegisterSuite) BeforeAll(t provider.T) {
 		tokens      map[string]map[string]string
 	)
 
-	// Read tokens from file (see WALLARM_TEST_TOKENS in gitlab CI/CD variables)
-	tokensFile = os.Getenv("WALLARM_TEST_TOKENS")
-	t.Require().NotEmpty(tokensFile, "WALLARM_TEST_TOKENS is not set")
+	// Read tokens from file. See vault for details
+	tokensFile = os.Getenv("W_TEST_TOKENS")
+	t.Require().NotEmpty(tokensFile, "W_TEST_TOKENS is not set")
 
 	fileContent, err = os.ReadFile(tokensFile)
 	t.Require().NoError(err, "Error reading tokens file")

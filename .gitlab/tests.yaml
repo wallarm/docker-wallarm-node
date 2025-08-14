@@ -52,11 +52,12 @@ variables:
 
 TEST_REGISTER_NODE:
   tags: [node-c2r4-stable-dind-amd]
-  image: dkr.wallarm.com/wallarm-node/meganode/register-tests:latest
+  image: dkr.wallarm.com/wallarm-node/aio-docker/register-tests:latest
   stage: test
   variables:
+    GIT_STRATEGY: none
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
-    ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${WALLARM_API_PRESET} ${CI_JOB_ID}"
+    ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${CI_JOB_ID}"
     ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
   rules:
     - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
@@ -64,11 +65,12 @@ TEST_REGISTER_NODE:
   extends:
     .x-get-credentials
   secrets:
-    ALLURE_TOKEN: {vault: "pipelines/common/smoke-test/${WALLARM_API_PRESET}/allure_server_token@node-team", file: false}
+    W_TEST_TOKENS: {vault: "pipelines/qa/register_tokens@node-team", file: true}
   before_script:
     - *x_script_docker_login
     - docker pull -q ${NODE_DOCKER_IMAGE}
   script:
+    - cd /app
     - make test-register-node-ci
 
 SMOKE_TESTS_DOCKER_AIO:

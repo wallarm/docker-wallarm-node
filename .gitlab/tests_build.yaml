@@ -1,0 +1,11 @@
+BUILD_REGISTER_NODE:
+  tags: [node-c2r4-stable-dind-amd]
+  stage: build
+  variables:
+    IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+  rules:
+    - if: $X_CI_BUILD_KIND == "tools:register-tests"
+  extends: .before-docker-build
+  script: 
+    - cd test/register_node/
+    - make register-tests-push-latest
