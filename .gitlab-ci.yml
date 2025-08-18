@@ -7,7 +7,7 @@ default:
   id_tokens:
     VAULT_ID_TOKEN:
       aud: https://gl.wallarm.com
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/devops/docker/gitlab-runner/gitlab-runner:v1.11.6
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/common:v0.5.0
   tags: [node-c05r1-stable-amd]
 
 stages:
@@ -57,6 +57,7 @@ workflow:
 BUILD_AIO_DOCKER_UPSTREAM:
   stage: build
   tags: [node-c4r8-stable-dind-amd]
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
   extends:
     - .before-docker-build
   rules:
@@ -90,6 +91,7 @@ BUILD_AIO_DOCKER_UPSTREAM:
 BUILD_AIO_DOCKER:
   stage: build
   tags: [node-c4r8-stable-dind-amd]
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
   variables:
     IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -107,7 +109,7 @@ BUILD_AIO_DOCKER:
 
 DOCKER_SCOUT_SCAN_ARTIFACT:
   stage: scan
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/devops/docker/gitlab-runner-helper-images/security_scanners:1.0.32
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
   needs:
     - job: BUILD_AIO_DOCKER_UPSTREAM
       optional: true
@@ -128,15 +130,17 @@ PUSH_DOCKER:
   stage: publish
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
-  image: docker:24.0.5
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
   extends:
     - .before-scout-scan
   script:
+    - echo "Pushing docker"
     - make docker-push
 
 SIGN_DOCKER:
   stage: publish
   tags: [node-c2r4-stable-dind-amd]
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
   needs:
     - job: PUSH_DOCKER
     - job: BUILD_AIO_DOCKER_UPSTREAM
@@ -172,6 +176,7 @@ SIGN_DOCKER:
 
 UPDATE_VERSION:
   stage: publish
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/gitlab:v0.5.0
   needs:
     - job: SIGN_DOCKER
   rules:

@@ -18,11 +18,6 @@
         -u "${X_CREDS_DOCKERHUB_WALLARMCICD_USER}" \
         -p "${X_CREDS_DOCKERHUB_WALLARMCICD_PASSWORD}"
 
-.x-tools-build-deps: &x-tools-build-deps
-  - |
-    apk update
-    apk add bash make git tar curl
-
 .x-get-credentials: &x_get_credentials
   secrets:
     GITLAB_TOKEN: {vault: "pipelines/gl_version_repo_creds/token_secret@node-team", file: false}
@@ -38,7 +33,6 @@
 
 .before-scout-scan:
   before_script:
-    - *x-tools-build-deps
     - *x_docker_login_private
     - *x_docker_login_public
 
