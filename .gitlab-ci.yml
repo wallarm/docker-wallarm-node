@@ -57,7 +57,7 @@ workflow:
 BUILD_AIO_DOCKER_UPSTREAM:
   stage: build
   tags: [node-c4r8-stable-dind-amd]
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
   extends:
     - .before-docker-build
   rules:
@@ -91,7 +91,7 @@ BUILD_AIO_DOCKER_UPSTREAM:
 BUILD_AIO_DOCKER:
   stage: build
   tags: [node-c4r8-stable-dind-amd]
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
   variables:
     IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -109,7 +109,7 @@ BUILD_AIO_DOCKER:
 
 DOCKER_SCOUT_SCAN_ARTIFACT:
   stage: scan
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
   needs:
     - job: BUILD_AIO_DOCKER_UPSTREAM
       optional: true
@@ -130,7 +130,7 @@ PUSH_DOCKER:
   stage: publish
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
   extends:
     - .before-scout-scan
   script:
@@ -140,7 +140,7 @@ PUSH_DOCKER:
 SIGN_DOCKER:
   stage: publish
   tags: [node-c2r4-stable-dind-amd]
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.5.0
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
   needs:
     - job: PUSH_DOCKER
     - job: BUILD_AIO_DOCKER_UPSTREAM
