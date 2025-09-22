@@ -156,18 +156,23 @@ SIGN_DOCKER:
     COSIGN_PRIVATE: {vault: "pipelines/cosign/private_key@node-team", file: false}
   script:
     - |
+      set -euo pipefail
       export IMAGE="docker.io/wallarm/${IMAGE_NAME}:${IMAGE_TAG}"
 
       docker pull -q ${IMAGE}
       export IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE)
       export IMAGE_URI=$(echo $IMAGE_DIGEST | sed -e 's/\@sha256:/:sha256-/')
       
-      SBOM_SPDX="${CI_PROJECT_DIR}/sbom_${IMAGE_TAG}_spdx.json"
-      syft -o spdx-json $IMAGE > $SBOM_SPDX
-
-      cosign attach sbom --sbom $SBOM_SPDX $IMAGE_DIGEST
-      cosign sign --yes --key env://COSIGN_PRIVATE "$IMAGE_URI.sbom"
-      cosign sign --recursive --yes --key env://COSIGN_PRIVATE $IMAGE_DIGEST
+      export SBOM_SPDX="${CI_PROJECT_DIR}/sbom_${IMAGE_TAG}_spdx.json"
+      export PROVENANCE_PREDICATE="${CI_PROJECT_DIR}/provenance_${IMAGE_TAG}.json"
+      syft -o spdx-json ${IMAGE} > ${SBOM_SPDX}
+      export IMAGE_SHA="${IMAGE_DIGEST##*:}"
+      export BUILD_FINISHED="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      apk add --no-cache python3 >/dev/null 2>&1 || apk add --no-cache python3
+      python3 build-scripts/generate_provenance.py
+      cosign attest --yes --key env://COSIGN_PRIVATE --type spdxjson --predicate ${SBOM_SPDX} ${IMAGE_DIGEST}
+      cosign attest --yes --key env://COSIGN_PRIVATE --type slsaprovenance1 --predicate ${PROVENANCE_PREDICATE} ${IMAGE_DIGEST}
+      cosign sign --recursive --yes --key env://COSIGN_PRIVATE ${IMAGE_DIGEST}
   artifacts:
     expire_in: 30 days
     paths:

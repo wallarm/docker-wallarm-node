@@ -55,5 +55,7 @@ docker buildx build \
   --build-arg NGINX_VERSION="$NGINX_VERSION" \
   --build-arg AIO_VERSION="$AIO_VERSION" \
   --build-arg COMMIT_SHA="$COMMIT_SHA" \
+  --provenance=true \
+  --sbom=true \
   --no-cache \
   -t $IMAGE $BUILDX_ARGS .
