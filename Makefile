@@ -3,7 +3,7 @@
 # Repo version pins
 .EXPORT_ALL_VARIABLES:
 
-AIO_VERSION       ?= 6.2.0-rc1
+AIO_VERSION       ?= 6.5.0
 
 ALPINE_VERSION    = 3.22
 NGINX_VERSION     = 1.28.0
