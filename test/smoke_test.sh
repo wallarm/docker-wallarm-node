@@ -114,6 +114,8 @@ set -e
 set -a
 
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 export NODE_GROUP_NAME="gitlab-docker-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 12; echo)"
@@ -157,4 +159,23 @@ else
 fi
 
 echo "Running tests ..."
-docker-compose -p $NODE_MODE -f test/docker-compose.$NODE_MODE.yaml exec pytest "${EXEC_CMD[@]}"
+
+# Create temp file for capturing output
+TEST_OUTPUT=$(mktemp)
+
+# Run tests and capture output
+docker-compose -p $NODE_MODE -f test/docker-compose.$NODE_MODE.yaml exec pytest "${EXEC_CMD[@]}" 2>&1 | tee "$TEST_OUTPUT"
+
+# Extract and display Allure report link if present
+if grep -q "Report link:" "$TEST_OUTPUT"; then
+  ALLURE_URL=$(grep "Report link:" "$TEST_OUTPUT" | sed 's/.*Report link: //')
+  echo ""
+  echo "========================================================================================================"
+  echo -e "${GREEN}✓ Tests completed successfully${NC}"
+  echo -e "${CYAN}🔗 Allure Report:${NC} ${ALLURE_URL}"
+  echo "========================================================================================================"
+  echo ""
+fi
+
+# Cleanup temp file
+rm -f "$TEST_OUTPUT"
