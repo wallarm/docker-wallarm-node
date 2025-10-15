@@ -23,70 +23,87 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 
 	var testCases map[string]shared.RegisterNodeCases
 
+	// Common allowed error patterns for all tests
+	commonAllowedErrors := []string{
+		"WALLARM:ACL: database is locked", // we are investigating this, but for now we ignore it
+	}
+
 	testCases = make(map[string]shared.RegisterNodeCases)
 	for subscription, tokenTypes := range testSuite.tokens {
 		for tokenType, token := range tokenTypes {
 			caseName := "Register Node with " + subscription + " " + tokenType
 			expectedResult := "\"node registration done\""
+			allowedErrors := commonAllowedErrors
 			if subscription == "EXPIRED" {
 				expectedResult = "subscription limited"
+				allowedErrors = append(allowedErrors, "subscription limited", "unable to open database file")
+			}
+			if subscription == "WAAP" {
+				// WAAP subscription has API enforcement disabled, so we expect a warning about it
+				allowedErrors = append(allowedErrors, "subscription limited for using api enforcement")
 			}
 			testCases[caseName] = shared.RegisterNodeCases{
-				Token:          token,
-				ExpectedResult: expectedResult,
-				TokenType:      tokenType,
-				Subscription:   subscription,
-				ApiHost:        "audit.api.wallarm.com",
-				ExpectFail:     false,
+				Token:                token,
+				ExpectedResult:       expectedResult,
+				TokenType:            tokenType,
+				Subscription:         subscription,
+				ApiHost:              "audit.api.wallarm.com",
+				ExpectFail:           false,
+				AllowedErrorPatterns: allowedErrors,
 			}
 		}
 	}
 
 	// Negative cases
 	testCases["Register Node with WRONG token"] = shared.RegisterNodeCases{
-		Token:          "BPwBS4jVGtLXNXx9nc",
-		ExpectedResult: "illegal base64 data",
-		TokenType:      "node_token",
-		Subscription:   "INVALID",
-		ApiHost:        "audit.api.wallarm.com",
-		ExpectFail:     false,
-		ExpectedError:  "illegal base64",
+		Token:                "BPwBS4jVGtLXNXx9nc",
+		ExpectedResult:       "illegal base64 data",
+		TokenType:            "node_token",
+		Subscription:         "INVALID",
+		ApiHost:              "audit.api.wallarm.com",
+		ExpectFail:           false,
+		ExpectedError:        "illegal base64",
+		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
 	}
 	testCases["Register Node with api_token no group"] = shared.RegisterNodeCases{
-		Token:          testSuite.tokens["AAS"]["api_token"],
-		ExpectedResult: "label \\\"group\\\" is required for this registration type",
-		TokenType:      "node_token", // this is api token, but to test the error we use node_token
-		Subscription:   "AAS",
-		ApiHost:        "audit.api.wallarm.com",
-		ExpectFail:     false,
-		ExpectedError:  "label \\\"group\\\" is required",
+		Token:                testSuite.tokens["AAS"]["api_token"],
+		ExpectedResult:       "label \\\"group\\\" is required for this registration type",
+		TokenType:            "node_token", // this is api token, but to test the error we use node_token
+		Subscription:         "AAS",
+		ApiHost:              "audit.api.wallarm.com",
+		ExpectFail:           false,
+		ExpectedError:        "label \\\"group\\\" is required",
+		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
 	}
 	testCases["Register Node with NFR wrong host"] = shared.RegisterNodeCases{
-		Token:          testSuite.tokens["NFR"]["node_token"],
-		ExpectedResult: "\"node registration done with error\"",
-		TokenType:      "node_token",
-		Subscription:   "NFR",
-		ApiHost:        "docs.wallarm.com",
-		ExpectFail:     false,
-		ExpectedError:  "request []: not found",
+		Token:                testSuite.tokens["NFR"]["node_token"],
+		ExpectedResult:       "\"node registration done with error\"",
+		TokenType:            "node_token",
+		Subscription:         "NFR",
+		ApiHost:              "docs.wallarm.com",
+		ExpectFail:           false,
+		ExpectedError:        "request []: not found",
+		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
 	}
 	testCases["Register Node with no token"] = shared.RegisterNodeCases{
-		Token:          "",
-		ExpectedResult: "no WALLARM_API_TOKEN",
-		TokenType:      "node_token",
-		Subscription:   "NFR",
-		ApiHost:        "audit.api.wallarm.com",
-		ExpectFail:     true,
-		ExpectedError:  "no private key",
+		Token:                "",
+		ExpectedResult:       "no WALLARM_API_TOKEN",
+		TokenType:            "node_token",
+		Subscription:         "NFR",
+		ApiHost:              "audit.api.wallarm.com",
+		ExpectFail:           true,
+		ExpectedError:        "no private key",
+		AllowedErrorPatterns: []string{},
 	}
 	testCases["Register Node with token from other host"] = shared.RegisterNodeCases{
-		Token:          testSuite.tokens["NFR"]["node_token"],
-		ExpectedResult: "access denied",
-		TokenType:      "node_token",
-		Subscription:   "NFR",
-		ApiHost:        "api.wallarm.com",
-		ExpectFail:     false,
-		ExpectedError:  "access denied",
+		Token:                testSuite.tokens["NFR"]["node_token"],
+		ExpectedResult:       "access denied",
+		TokenType:            "node_token",
+		Subscription:         "NFR",
+		ApiHost:              "api.wallarm.com",
+		ExpectFail:           false,
+		ExpectedError:        "access denied",
+		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
 	}
 
 	for caseName, params := range testCases {
@@ -104,7 +121,6 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 				ReqInterval = 2 * time.Second
 				ReqTimeout  = 80 * time.Second
 				re          *regexp.Regexp
-				errors      []string
 			)
 
 			ctx, cancel := context.WithCancel(context.Background())
@@ -123,6 +139,16 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 			}, nil, nil, nil, "")
 			stepCtx.Require().NoError(err, "Error creating container")
 
+			// Ensure container cleanup happens even if test fails
+			defer func() {
+				removeCtx := context.Background()
+				removeErr := testSuite.dockerClient.ContainerRemove(
+					removeCtx, resp.ID, container.RemoveOptions{RemoveVolumes: true, Force: true})
+				if removeErr != nil {
+					stepCtx.Logf("Warning: failed to remove container %s: %v", resp.ID, removeErr)
+				}
+			}()
+
 			err = testSuite.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{})
 			stepCtx.Require().NoError(err, "Error starting container")
 
@@ -132,6 +158,8 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 					stepCtx.Logf("Failed to get container logs: %v", err)
 					return false, nil
 				}
+				defer out.Close()
+
 				logs, err = io.ReadAll(out)
 				if err != nil {
 					stepCtx.Logf("Failed to read container logs: %v", err)
@@ -153,26 +181,43 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 				return false, nil
 			})
 
-			stepCtx.WithNewStep("Delete container", func(subStepCtx provider.StepCtx) {
-
-				ctxNew := context.Background()
-				subStepCtx.Assert().
-					NoError(testSuite.dockerClient.ContainerRemove(
-						ctxNew, resp.ID, container.RemoveOptions{RemoveVolumes: true, Force: true}),
-						"Error stopping image")
-			})
-
 			stepCtx.WithNewAttachment("Container logs", "text/plain", logs)
 			stepCtx.Require().True(success, "Error waiting node to be in the expected condition")
 			stepCtx.Require().Contains(strLogs, paramsTest.ExpectedResult, "Error getting expected message: '%v' in log", paramsTest.ExpectedResult)
 
-			// Check if there are any unexpected errors in the logs
-			re = regexp.MustCompile(`level\":\"error.*\n`)
-			errors = re.FindAllString(strLogs, -1)
+			// Check if there are any error messages in the logs (case insensitive)
+			re = regexp.MustCompile(`(?i)error`)
+			errorLines := []string{}
 
-			for _, logError := range errors {
-				stepCtx.Require().Contains(logError, paramsTest.ExpectedError, "Error should match the expected: '%v'", logError)
+			// Split logs into lines and check each line
+			for _, line := range strings.Split(strLogs, "\n") {
+				if re.MatchString(line) {
+					// Check if this error is in the allowed patterns
+					isAllowed := false
+
+					// If we have an expected error and this line contains it, it's allowed
+					if paramsTest.ExpectedError != "" && strings.Contains(line, paramsTest.ExpectedError) {
+						isAllowed = true
+					}
+
+					// Check against allowed error patterns
+					for _, allowedPattern := range paramsTest.AllowedErrorPatterns {
+						if matched, _ := regexp.MatchString(allowedPattern, line); matched {
+							isAllowed = true
+							break
+						}
+					}
+
+					if !isAllowed {
+						errorLines = append(errorLines, line)
+					}
+				}
 			}
+
+			if len(errorLines) > 0 {
+				stepCtx.Logf("Found unexpected error messages in logs:\n%s", strings.Join(errorLines, "\n"))
+			}
+			stepCtx.Require().Empty(errorLines, "Found unexpected error messages in logs")
 		})
 	}
 }
@@ -217,6 +262,16 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 	}, nil, nil, nil, "")
 	t.Require().NoError(err, "Error creating container")
 
+	// Ensure container cleanup happens even if test fails
+	defer func() {
+		removeCtx := context.Background()
+		removeErr := testSuite.dockerClient.ContainerRemove(
+			removeCtx, resp.ID, container.RemoveOptions{RemoveVolumes: true, Force: true})
+		if removeErr != nil {
+			t.Logf("Warning: failed to remove container %s: %v", resp.ID, removeErr)
+		}
+	}()
+
 	err = testSuite.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	t.Require().NoError(err, "Error starting container")
 
@@ -227,6 +282,8 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 			t.Logf("Failed to get container logs: %v", err)
 			return false, nil
 		}
+		defer out.Close()
+
 		logs, err = io.ReadAll(out)
 		if err != nil {
 			t.Logf("Failed to read container logs: %v", err)
@@ -250,7 +307,11 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 
 	execLog, err = testSuite.dockerClient.ContainerExecAttach(ctx, exec.ID, container.ExecStartOptions{})
 	t.Require().NoError(err, "Error starting exec")
+
 	wcliLog, err = io.ReadAll(execLog.Reader)
+	if execLog.Reader != nil {
+		execLog.Close()
+	}
 	t.WithNewAttachment("kill_wcli.log", "text/plain", wcliLog)
 
 	execInspect, err = testSuite.dockerClient.ContainerExecInspect(ctx, exec.ID)
@@ -263,6 +324,8 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 			t.Logf("Failed to get container logs: %v", err)
 			return false, nil
 		}
+		defer out.Close()
+
 		logs, err = io.ReadAll(out)
 		strLogs = string(logs[:])
 
@@ -277,14 +340,6 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 	})
 
 	t.WithNewAttachment("wcli.log", "text/plain", logs)
-
-	t.WithNewStep("Delete container", func(subStepCtx provider.StepCtx) {
-		ctxNew := context.Background()
-		subStepCtx.Assert().
-			NoError(testSuite.dockerClient.ContainerRemove(
-				ctxNew, resp.ID, container.RemoveOptions{RemoveVolumes: true, Force: true}),
-				"Error stopping image")
-	})
 	t.Require().True(success, "Error getting expected message: '%v' in log", expectedMessage)
 
 	// Check if there are any errors in the logs

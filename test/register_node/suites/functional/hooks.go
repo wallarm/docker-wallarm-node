@@ -47,11 +47,12 @@ func (testSuite *RegisterSuite) BeforeAll(t provider.T) {
 	t.Require().NoError(err, "Error creating docker client")
 }
 
-func (testSuite *RegisterSuite) BeforeEach(t provider.T) {
-}
-
 func (testSuite *RegisterSuite) AfterAll(t provider.T) {
-}
-
-func (testSuite *RegisterSuite) AfterEach(t provider.T) {
+	// Close Docker client to prevent resource leaks
+	if testSuite.dockerClient != nil {
+		err := testSuite.dockerClient.Close()
+		if err != nil {
+			t.Logf("Warning: failed to close Docker client: %v", err)
+		}
+	}
 }
