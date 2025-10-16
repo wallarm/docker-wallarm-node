@@ -140,16 +140,21 @@ RUN_COMPARATOR:
   stage: test
   variables:
     DUMP_NUMBERS: "0 1 2 3 4 5"
-    WALLARM_NODE1_IMAGE: "docker.io/wallarm/${IMAGE_NAME}:latest"
-    WALLARM_NODE2_IMAGE: ${NODE_DOCKER_IMAGE}
+    NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
   rules:
     - if: $X_CI_BUILD_KIND == "develop"
       when: manual
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   trigger:
-    project: all/qa/comparator
+    project: wallarm-node/tests/comparator
     strategy: depend
-    branch: master
+    branch: 3.0.0
     forward:
       yaml_variables: true
+    inputs:
+      wallarm_node1_image: "docker.io/wallarm/${IMAGE_NAME}:latest"
+      wallarm_node2_image: "$NODE_DOCKER_IMAGE"
+      wallarm_node1_type: nginx-node
+      wallarm_node2_type: nginx-node
+  # needed to make this job non-blocking in case of manual trigger
   allow_failure: true
