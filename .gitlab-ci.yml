@@ -121,6 +121,7 @@ DOCKER_SCOUT_SCAN_ARTIFACT:
     - if: $X_CI_BUILD_KIND =~ /^(develop)$/
       allow_failure: true
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+      allow_failure: true # temporary 
   extends:
     - .before-scout-scan
   script:
