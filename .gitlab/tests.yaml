@@ -150,7 +150,7 @@ RUN_COMPARATOR:
   trigger:
     project: wallarm-node/tests/comparator
     strategy: depend
-    branch: 3.0.0
+    branch: 3.0.1
     forward:
       yaml_variables: true
     inputs:
