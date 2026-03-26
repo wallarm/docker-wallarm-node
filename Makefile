@@ -3,9 +3,9 @@
 # Repo version pins
 .EXPORT_ALL_VARIABLES:
 
-AIO_VERSION       ?= 6.10.0
+AIO_VERSION       ?= 6.11.1
 
-ALPINE_VERSION    = 3.22
+ALPINE_VERSION    = 3.23
 NGINX_VERSION     = 1.28.2
 GOMPLATE_VERISON  = 3.11.7
 COMMIT_SHA        ?= git-$(shell git rev-parse --short HEAD)
