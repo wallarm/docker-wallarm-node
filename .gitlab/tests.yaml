@@ -5,18 +5,6 @@ variables:
 
   DEPLOYER_IMAGE: dkr.wallarm.com/all/qa/aio_deploy/aio_deploy:${DEPLOYER_BRANCH}
 
-  RUN_SMOKE:
-    description: "Defines whether to run all kind of tests or not"
-    value: "AiO and docker and scripts and unit"
-    options:
-      - "AiO and docker and scripts and unit and compat"
-      - "AiO and docker and scripts and unit"
-      - "AiO and docker and scripts"
-      - "AiO only"
-      - "docker only"
-      - "scripts only"
-      - "compat only"
-      - "no"
   WALLARM_API_PRESET:
     value: "eu1"
     description: "Cloud to deploy the node on"
@@ -60,7 +48,7 @@ TEST_REGISTER_NODE:
     ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${CI_JOB_ID}"
     ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
   rules:
-    - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
+    - if: $X_CI_BUILD_KIND == "develop"
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   extends:
     .x-get-credentials
@@ -76,7 +64,7 @@ TEST_REGISTER_NODE:
 SMOKE_TESTS_DOCKER_AIO:
   stage: test
   rules:
-    - if: $X_CI_BUILD_KIND == "develop" && $RUN_SMOKE =~ /docker/
+    - if: $X_CI_BUILD_KIND == "develop"
       when: manual
   variables:
     PYTEST_PARAMS: "--allure-features=Node"
@@ -122,6 +110,31 @@ SMOKE_TESTS_DOCKER_RELEASE:
     when: always
     paths:
       - node-logs-*.tar.gz
+
+TEST_WSTORE_COMPAT:
+  stage: test
+  image: golang:1.23-alpine
+  rules:
+    - if: $X_CI_BUILD_KIND == "develop"
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+  variables:
+    # temporary wait untill wstore image with node tag with debug is available, then will switch to it and remove the comment
+    WSTORE_IMAGE: dkr.wallarm.com/wallarm-node/aio-docker/node:6.12.0-main-f15164a6
+    ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${CI_JOB_ID}"
+    ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
+  extends:
+    .x-get-api-creds
+  before_script:
+    - apk add --no-cache docker-cli docker-cli-compose make
+    - wget -q "https://github.com/allure-framework/allurectl/releases/download/2.17.0/allurectl_linux_amd64" -O /usr/local/bin/allurectl && chmod +x /usr/local/bin/allurectl
+    - *x_script_docker_login
+    - docker pull -q ${NODE_DOCKER_IMAGE}
+    - docker pull -q ${WSTORE_IMAGE}
+  script:
+    - cd test/wstore_compat
+    - make test-wstore-compat-ci
+  tags:
+    - node-c2r4-stable-dind-amd
 
 LOAD_TEST:
   stage: test

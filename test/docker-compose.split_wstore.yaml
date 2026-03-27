@@ -1,0 +1,38 @@
+services:
+  node:
+    image: ${NODE_DOCKER_IMAGE}
+    ports:
+      - "5000:80"
+    environment:
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
+      WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_LABELS: ${WALLARM_LABELS}
+      POSTANALYTIC_ADDRESS: post-analytics
+    healthcheck:
+      test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
+      timeout: 5s
+      retries: 10
+    volumes:
+      - "./nginx_conf/wallarm_node.conf:/etc/nginx/http.d/default.conf"
+      - "./nginx_conf/nginx_node.conf:/etc/nginx/http.d/workload.conf"
+    depends_on:
+      - post-analytics
+
+  post-analytics:
+    image: ${WSTORE_IMAGE}
+    ports:
+      - "8989:8989"
+    environment:
+      WALLARM_API_HOST: ${WALLARM_API_HOST}
+      WALLARM_API_CA_VERIFY: ${WALLARM_API_CA_VERIFY:-true}
+      WALLARM_API_TOKEN: ${WALLARM_API_TOKEN}
+      POSTANALYTIC_ONLY: true
+      NODE_GROUP_NAME: ${NODE_GROUP_NAME}
+      WALLARM_LABELS: ${WALLARM_LABELS}
+      WALLARM_WSTORE_DEBUG_HTTP_ENDPOINT: "0.0.0.0:8989"
+    healthcheck:
+      test: bash -c '[ -f /opt/wallarm/etc/wallarm/node.yaml ]'
+      timeout: 5s
+      retries: 10
