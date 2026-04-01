@@ -116,7 +116,7 @@ DOCKER_SCOUT_SCAN_ARTIFACT:
     - job: BUILD_AIO_DOCKER
       optional: true
   variables:
-    DOCKER_SCOUT_ARGS: "--exit-code --only-severity critical,high"
+    DOCKER_SCOUT_ARGS: "--exit-code --only-severity critical,high --ignore-suppressed"
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(develop)$/
       allow_failure: true
@@ -125,6 +125,7 @@ DOCKER_SCOUT_SCAN_ARTIFACT:
   extends:
     - .before-scout-scan
   script:
+    - docker-scout config organization wallarm
     - make docker-scout-scan
 
 PUSH_DOCKER:
