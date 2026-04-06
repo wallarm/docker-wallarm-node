@@ -128,8 +128,20 @@ DOCKER_SCOUT_SCAN_ARTIFACT:
     - docker-scout config organization wallarm
     - make docker-scout-scan
 
+PUBLISH_GUARD:
+  stage: publish
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "pipeline" && $X_CI_BUILD_KIND == "production"
+      when: manual
+      allow_failure: true
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+      when: on_success
+  script:
+    - echo "Publish gate opened"
+
 PUSH_DOCKER:
   stage: publish
+  needs: [PUBLISH_GUARD]
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
