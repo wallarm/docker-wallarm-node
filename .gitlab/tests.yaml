@@ -70,6 +70,7 @@ SMOKE_TESTS_DOCKER_AIO:
     PYTEST_PARAMS: "--allure-features=Node"
     TEST_NODE_DEPLOY_TARGET: "docker only"
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
+    TEST_RUNNER_TAG: ${SMOKE_TEST_RUNNER_TAG}
   trigger:
     strategy: depend
     project: tests/smoke-tests
