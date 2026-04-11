@@ -70,13 +70,13 @@ SMOKE_TESTS_DOCKER_AIO:
     PYTEST_PARAMS: "--allure-features=Node"
     TEST_NODE_DEPLOY_TARGET: "docker only"
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
-    TEST_RUNNER_TAG: ${SMOKE_TEST_RUNNER_TAG}
+    WALLARM_API_PRESET: ${WALLARM_API_PRESET}
   trigger:
     strategy: depend
     project: tests/smoke-tests
     branch: master
     forward:
-      pipeline_variables: true
+      pipeline_variables: false
       yaml_variables: true
   allow_failure: true
 
