@@ -64,6 +64,9 @@ TEST_REGISTER_NODE:
 SMOKE_TESTS_DOCKER_AIO:
   stage: test
   rules:
+    - if: $X_CI_BUILD_KIND == "cve-scan"
+      when: manual
+      allow_failure: true
     - if: $X_CI_BUILD_KIND == "develop"
       when: manual
   variables:
