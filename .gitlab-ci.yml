@@ -50,6 +50,8 @@ workflow:
       when: always
     - if: $CI_PIPELINE_SOURCE == "web"
       when: always
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: always
     - when: never
 
 
