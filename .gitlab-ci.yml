@@ -101,7 +101,7 @@ BUILD_AIO_DOCKER:
   extends:
     - .before-docker-build
   rules:
-    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
+    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate|cve-scan)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
   script:
     - make docker-image-build
   artifacts:
