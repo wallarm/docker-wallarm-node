@@ -5,6 +5,7 @@ package functional
 import (
 	"context"
 	"io"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -15,6 +16,32 @@ import (
 
 	"gl.wallarm.com/wallarm-node/aio-docker/test/register_node/shared"
 )
+
+// apiHost returns the default Wallarm API host used by positive/generic cases.
+// Overridable via WALLARM_API_HOST so the same matrix can target any cloud
+// (e.g. a devenv for NODE-7651 backward-compat runs) without forking cases.
+// The two negative cases that intentionally use a *wrong* host
+// (docs.wallarm.com, api.wallarm.com) stay hardcoded.
+func apiHost() string {
+	if h := os.Getenv("WALLARM_API_HOST"); h != "" {
+		return h
+	}
+	return "audit.api.wallarm.com"
+}
+
+// nodeHostConfig returns a bind-mount HostConfig when WALLARM_GONODE_CONFIG
+// points to a local yaml file — required for node-native-aio (go-node) images,
+// which refuse to start without /opt/wallarm/etc/wallarm/go-node.yaml. Nil for
+// meganode AiO images that don't need it.
+func nodeHostConfig() *container.HostConfig {
+	cfg := os.Getenv("WALLARM_GONODE_CONFIG")
+	if cfg == "" {
+		return nil
+	}
+	return &container.HostConfig{
+		Binds: []string{cfg + ":/opt/wallarm/etc/wallarm/go-node.yaml:ro"},
+	}
+}
 
 func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 	t.Title("Register Node")
@@ -47,64 +74,17 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 				ExpectedResult:       expectedResult,
 				TokenType:            tokenType,
 				Subscription:         subscription,
-				ApiHost:              "audit.api.wallarm.com",
+				ApiHost:              apiHost(),
 				ExpectFail:           false,
 				AllowedErrorPatterns: allowedErrors,
 			}
 		}
 	}
 
-	// Negative cases
-	testCases["Register Node with WRONG token"] = shared.RegisterNodeCases{
-		Token:                "BPwBS4jVGtLXNXx9nc",
-		ExpectedResult:       "illegal base64 data",
-		TokenType:            "node_token",
-		Subscription:         "INVALID",
-		ApiHost:              "audit.api.wallarm.com",
-		ExpectFail:           false,
-		ExpectedError:        "illegal base64",
-		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
-	}
-	testCases["Register Node with api_token no group"] = shared.RegisterNodeCases{
-		Token:                testSuite.tokens["AAS"]["api_token"],
-		ExpectedResult:       "label \\\"group\\\" is required for this registration type",
-		TokenType:            "node_token", // this is api token, but to test the error we use node_token
-		Subscription:         "AAS",
-		ApiHost:              "audit.api.wallarm.com",
-		ExpectFail:           false,
-		ExpectedError:        "label \\\"group\\\" is required",
-		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
-	}
-	testCases["Register Node with NFR wrong host"] = shared.RegisterNodeCases{
-		Token:                testSuite.tokens["NFR"]["node_token"],
-		ExpectedResult:       "\"node registration done with error\"",
-		TokenType:            "node_token",
-		Subscription:         "NFR",
-		ApiHost:              "docs.wallarm.com",
-		ExpectFail:           false,
-		ExpectedError:        "request []: not found",
-		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
-	}
-	testCases["Register Node with no token"] = shared.RegisterNodeCases{
-		Token:                "",
-		ExpectedResult:       "no WALLARM_API_TOKEN",
-		TokenType:            "node_token",
-		Subscription:         "NFR",
-		ApiHost:              "audit.api.wallarm.com",
-		ExpectFail:           true,
-		ExpectedError:        "no private key",
-		AllowedErrorPatterns: []string{},
-	}
-	testCases["Register Node with token from other host"] = shared.RegisterNodeCases{
-		Token:                testSuite.tokens["NFR"]["node_token"],
-		ExpectedResult:       "access denied",
-		TokenType:            "node_token",
-		Subscription:         "NFR",
-		ApiHost:              "api.wallarm.com",
-		ExpectFail:           false,
-		ExpectedError:        "access denied",
-		AllowedErrorPatterns: append(commonAllowedErrors, "unable to open database file"),
-	}
+	// Negative cases live in register_negative.go (build tag !positive_only).
+	// Build with -tags "functional,positive_only" to skip them — used for
+	// go-node/native-aio runs where negative-case log signatures differ.
+	appendNegativeCases(testCases, testSuite.tokens, commonAllowedErrors)
 
 	for caseName, params := range testCases {
 		paramsTest := params
@@ -136,7 +116,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 				Image: testSuite.imageName,
 				Tty:   false,
 				Env:   envVars,
-			}, nil, nil, nil, "")
+			}, nodeHostConfig(), nil, nil, "")
 			stepCtx.Require().NoError(err, "Error creating container")
 
 			// Ensure container cleanup happens even if test fails
@@ -242,8 +222,8 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 		ReqTimeout      = 80 * time.Second
 		execLog         types.HijackedResponse
 		expectedMessage = "node unregistration done"
-		re		        *regexp.Regexp
-		errors   	    []string
+		re              *regexp.Regexp
+		errors          []string
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -251,7 +231,7 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 
 	envVars = []string{
 		"WALLARM_API_TOKEN=" + testSuite.tokens["NFR"]["node_token"],
-		"WALLARM_API_HOST=audit.api.wallarm.com",
+		"WALLARM_API_HOST=" + apiHost(),
 		"WALLARM_NODE_UNREGISTER=true",
 	}
 
@@ -259,7 +239,7 @@ func (testSuite *RegisterSuite) TestUnRegisterNode(t provider.T) {
 		Image: testSuite.imageName,
 		Tty:   false,
 		Env:   envVars,
-	}, nil, nil, nil, "")
+	}, nodeHostConfig(), nil, nil, "")
 	t.Require().NoError(err, "Error creating container")
 
 	// Ensure container cleanup happens even if test fails
