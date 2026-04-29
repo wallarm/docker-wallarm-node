@@ -146,7 +146,12 @@ PUBLISH_GUARD:
 
 PUSH_DOCKER:
   stage: publish
-  needs: [PUBLISH_GUARD]
+  needs:
+    - job: PUBLISH_GUARD
+    - job: BUILD_AIO_DOCKER_UPSTREAM
+      optional: true
+    - job: BUILD_AIO_DOCKER
+      optional: true
   rules:
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
