@@ -122,8 +122,7 @@ TEST_WSTORE_COMPAT:
     - if: $X_CI_BUILD_KIND == "develop"
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
   variables:
-    # temporary wait untill wstore image with node tag with debug is available, then will switch to it and remove the comment
-    WSTORE_IMAGE: dkr.wallarm.com/wallarm-node/aio-docker/node:6.12.0-main-f15164a6
+    WSTORE_IMAGE: dkr.wallarm.com/wallarm-node/aio-docker/node:6.12.0-rc5
     ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${CI_JOB_ID}"
     ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
   extends:
