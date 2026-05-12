@@ -40,16 +40,16 @@ variables:
 
 TEST_REGISTER_NODE:
   tags: [node-c2r4-stable-dind-amd]
-  image: dkr.wallarm.com/wallarm-node/aio-docker/register-tests:latest
+  image: dkr.wallarm.com/wallarm-node/aio-docker/register-tests:${REGISTER_TESTS_IMAGE_TAG}
   stage: test
   variables:
     GIT_STRATEGY: none
     NODE_DOCKER_IMAGE: ${NODE_DOCKER_IMAGE}
+    REGISTER_TESTS_IMAGE_TAG: latest
     ALLURE_LAUNCH_NAME: "${CI_COMMIT_REF_NAME} #${CI_COMMIT_SHORT_SHA} on ${CI_JOB_ID}"
     ALLURE_LAUNCH_TAGS: "USR:${GITLAB_USER_NAME}, SRC:${CI_PIPELINE_SOURCE}, GITLAB_REPO:${CI_PROJECT_NAME}"
   rules:
-    - if: $X_CI_BUILD_KIND == "develop"
-    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate|develop)$/
   extends:
     .x-get-credentials
   secrets:

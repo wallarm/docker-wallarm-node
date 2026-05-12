@@ -4,6 +4,7 @@ package functional
 
 import (
 	"os"
+	"os/exec"
 
 	"encoding/json"
 	"github.com/docker/docker/client"
@@ -45,6 +46,12 @@ func (testSuite *RegisterSuite) BeforeAll(t provider.T) {
 
 	testSuite.dockerClient, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	t.Require().NoError(err, "Error creating docker client")
+
+	// Pull the node image using CLI (reuses credentials from docker login)
+	pullCmd := exec.Command("docker", "pull", "-q", testSuite.imageName)
+	pullOut, err := pullCmd.CombinedOutput()
+	t.Require().NoError(err, "Error pulling image %s: %s", testSuite.imageName, string(pullOut))
+	t.Logf("Image %s pulled successfully", testSuite.imageName)
 }
 
 func (testSuite *RegisterSuite) AfterAll(t provider.T) {

@@ -1,54 +1,5 @@
 #!/bin/bash
 
-register_node() {
-  args="job:register"
-
-  WALLARM_API_USE_SSL="${WALLARM_API_USE_SSL:-true}"
-  WALLARM_API_CA_VERIFY="${WALLARM_API_CA_VERIFY:-true}"
-
-  if [ -n "$WALLARM_API_HOST" ]; then
-    args="$args -host=$WALLARM_API_HOST"
-  fi
-
-  if [ -n "$WALLARM_API_PORT" ]; then
-    args="$args -port=$WALLARM_API_PORT"
-  fi
-
-  if [ x"$WALLARM_API_USE_SSL" = x"false" ] \
-     || [ x"$WALLARM_API_USE_SSL" = x"False" ] \
-     || [ x"$WALLARM_API_USE_SSL" = x"no" ]
-  then
-    args="$args -ssl=false"
-  fi
-
-  if [ x"$WALLARM_API_CA_VERIFY" = x"false" ] \
-     || [ x"$WALLARM_API_CA_VERIFY" = x"False" ] \
-     || [ x"$WALLARM_API_CA_VERIFY" = x"no" ]
-  then
-    args="$args -ssl-verify=false"
-  fi
-
-  if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
-    || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
-    || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
-  then
-    args="$args -mode=post_analytic"
-  fi
-
-  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
-    args="$args -mode=filtering"
-  fi
-
-  if [ -e /opt/wallarm/etc/wallarm/node.yaml ] \
-     && [ -s /opt/wallarm/etc/wallarm/node.yaml ]
-  then
-    echo "Node registration skipped - node.yaml already exists"
-  else
-    /opt/wallarm/register-node \
-      $args
-  fi
-}
-
 configure_nginx() {
 
   if [ -n "$POSTANALYTIC_ADDRESS" ]; then
@@ -85,23 +36,53 @@ configure_services() {
     || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
     || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
   then
-    mv /opt/wallarm/etc/supervisord.conf.postanalytics /opt/wallarm/etc/supervisord.conf
+    WD_CONFIG=/opt/wallarm/etc/wd.postanalytics.yaml
     sed -i -e "s|127.0.0.1:3313|0.0.0.0:3313|g"  /opt/wallarm/wstore/wstore.yaml
     sed -i -e "s|127.0.0.1:6388|0.0.0.0:6388|g"  /opt/wallarm/wstore/wstore.yaml
     sed -i -e "s|127.0.0.1:9001|0.0.0.0:9001|g"  /opt/wallarm/wstore/wstore.yaml
-  fi
-
-  if [ -n "$POSTANALYTIC_ADDRESS" ]; then
-    mv /opt/wallarm/etc/supervisord.conf.filtering /opt/wallarm/etc/supervisord.conf
+  elif [ -n "$POSTANALYTIC_ADDRESS" ]; then
+    WD_CONFIG=/opt/wallarm/etc/wd.filtering.yaml
+  else
+    WD_CONFIG=/opt/wallarm/etc/wd.all.yaml
   fi
 
   if [ x"$WALLARM_APIFW_ENABLE" = x"false" ] \
     || [ x"$WALLARM_APIFW_ENABLE" = x"False" ]
   then
-    sed -i -e '/\[program:api-firewall\]/,/\/api-firewall-out.log/d' \
-      /opt/wallarm/etc/supervisord.conf
+    # Disable api-firewall via wd selective component mode.
+    # Explicitly list all other processes so selective mode enables them only.
+    if [ -n "$POSTANALYTIC_ADDRESS" ]; then
+      # filtering mode: only wcli
+      export WALLARM_WD__COMPONENT_WCLI=true
+    else
+      # all mode: wstore + appstructure + wcli
+      export WALLARM_WD__COMPONENT_WSTORE=true
+      export WALLARM_WD__COMPONENT_APPSTRUCTURE=true
+      export WALLARM_WD__COMPONENT_WCLI=true
+    fi
     sed -i -e '/wallarm-apifw-loc/d' \
       /etc/nginx/nginx.conf
+  fi
+}
+
+# Translate WALLARM_API_* env vars to wd node config overrides.
+# This preserves backward compatibility with existing deployments.
+apply_api_env_overrides() {
+  [ -n "$WALLARM_API_HOST" ] && export WALLARM_WD__NODE__HOST="$WALLARM_API_HOST"
+  [ -n "$WALLARM_API_PORT" ] && export WALLARM_WD__NODE__PORT="$WALLARM_API_PORT"
+
+  if [ x"$WALLARM_API_USE_SSL" = x"false" ] \
+     || [ x"$WALLARM_API_USE_SSL" = x"False" ] \
+     || [ x"$WALLARM_API_USE_SSL" = x"no" ]
+  then
+    export WALLARM_WD__NODE__USE_SSL=false
+  fi
+
+  if [ x"$WALLARM_API_CA_VERIFY" = x"false" ] \
+     || [ x"$WALLARM_API_CA_VERIFY" = x"False" ] \
+     || [ x"$WALLARM_API_CA_VERIFY" = x"no" ]
+  then
+    export WALLARM_WD__NODE__CA_VERIFY=false
   fi
 }
 
@@ -135,22 +116,21 @@ if [ -z "$WALLARM_API_TOKEN" ]; then
   fi
 fi
 
-# Propagate env vars to supervisor
+# Propagate env vars to wd child processes
 set -a && source /opt/wallarm/env.list && set +a
 
 printenv >> /etc/environment
 configure_services
-#taken from https://unix.stackexchange.com/a/71511
-{ register_node |& tee /dev/fd/3 | grep -q 'label "group" is required for this registration type' && exit; } 3>&1
+apply_api_env_overrides
 configure_nginx
 
 if [ x"$POSTANALYTIC_ONLY" = x"true" ] \
   || [ x"$POSTANALYTIC_ONLY" = x"True" ] \
   || [ x"$POSTANALYTIC_ONLY" = x"yes" ]
 then
-  exec /opt/wallarm/usr/bin/python3.10 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf
+  exec /opt/wallarm/usr/bin/wd --config "$WD_CONFIG"
 else
-  /opt/wallarm/usr/bin/python3.10 /opt/wallarm/usr/bin/supervisord -n -c /opt/wallarm/etc/supervisord.conf &
-  sleep 1
+  /opt/wallarm/usr/bin/wd --config "$WD_CONFIG" &
+  /opt/wallarm/usr/bin/wd --config "$WD_CONFIG" ctl status --wait-init
   exec /usr/sbin/nginx -g "daemon off;"
 fi

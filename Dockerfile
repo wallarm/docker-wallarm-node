@@ -57,6 +57,12 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 # install wallarm
 COPY --chown=wallarm:wallarm build/$TARGETPLATFORM/ /
 
+# Verify required binaries are present in the installer package.
+# If wd is missing, it means the meganode installer is too old (predates NODE-6240).
+# Run tests via meganode CI (BUILD_AIO_DOCKER_UPSTREAM), not by pushing directly to aio-docker.
+RUN test -f /opt/wallarm/usr/bin/wd || \
+    { echo "ERROR: /opt/wallarm/usr/bin/wd is missing from the installer package. Use meganode CI pipeline to build (BUILD_AIO_DOCKER_UPSTREAM), not a direct GCS download."; exit 1; }
+
 # auto-select matching module
 COPY build-scripts/pick_module.sh /opt/wallarm/pick_module.sh
 RUN /bin/sh /opt/wallarm/pick_module.sh && rm /opt/wallarm/pick_module.sh
@@ -70,10 +76,12 @@ COPY scripts/init /usr/local/bin/
 
 # configs
 RUN /bin/bash -c \
-    'mkdir -p /etc/nginx/conf.d && \
+    'mkdir -p /etc/nginx/conf.d \
+              /opt/wallarm/var/lib/wd && \
     touch /etc/environment && \
     rm /etc/nginx/conf.d/stream.conf && \
-    chown -R wallarm:wallarm /run /etc/environment /etc/nginx /var/log/nginx /var/lib/nginx'
+    chown -R wallarm:wallarm /run /etc/environment /etc/nginx /var/log/nginx /var/lib/nginx \
+                              /opt/wallarm/var/lib/wd'
 COPY conf/nginx /etc/nginx/
 COPY conf/nginx_templates /opt/wallarm/
 
