@@ -1,11 +1,14 @@
 BUILD_REGISTER_NODE:
   tags: [node-c2r4-stable-dind-amd]
+  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
   stage: build
   variables:
     IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+    REGISTER_TESTS_MAKE_TARGET: register-tests-push-latest
   rules:
     - if: $X_CI_BUILD_KIND == "tools:register-tests"
   extends: .before-docker-build
-  script: 
+  script:
     - cd test/register_node/
-    - make register-tests-push-latest
+    - make register-tests-build
+    - make $REGISTER_TESTS_MAKE_TARGET

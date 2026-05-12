@@ -35,8 +35,3 @@ test-register-node-local:
 	rm -rf ./cmd/allure-results/ ; \
 	go test -v -count=1 ./cmd/... -tags functional ; \
 	allure serve ./cmd/allure-results/ -p 1234 -h 127.0.0.1
-
-test-register-node-local-positive:
-	rm -rf ./cmd/allure-results/ ; \
-	go test -v -count=1 ./cmd/... -tags "functional,positive_only" ; \
-	allure serve ./cmd/allure-results/ -p 1234 -h 127.0.0.1
