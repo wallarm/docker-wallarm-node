@@ -34,6 +34,7 @@ variables:
       - production
       - release-candidate
       - tools:register-tests
+      - cve-scan
 
 workflow:
   rules:
@@ -49,6 +50,8 @@ workflow:
       when: always
     - if: $CI_PIPELINE_SOURCE == "web"
       when: always
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: always
     - when: never
 
 
@@ -61,7 +64,7 @@ BUILD_AIO_DOCKER_UPSTREAM:
   extends:
     - .before-docker-build
   rules:
-    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE == "pipeline"'
+    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate|cve-scan)$/ && $CI_PIPELINE_SOURCE == "pipeline"'
   variables:
     SKIP_AIO_DOWNLOAD: true
     NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -98,7 +101,7 @@ BUILD_AIO_DOCKER:
   extends:
     - .before-docker-build
   rules:
-    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
+    - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate|cve-scan)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
   script:
     - make docker-image-build
   artifacts:
@@ -118,6 +121,8 @@ DOCKER_SCOUT_SCAN_ARTIFACT:
   variables:
     DOCKER_SCOUT_ARGS: "--exit-code --only-severity critical,high --ignore-suppressed"
   rules:
+    - if: $X_CI_BUILD_KIND == "cve-scan"
+      allow_failure: true
     - if: $X_CI_BUILD_KIND =~ /^(develop)$/
       allow_failure: true
     - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
