@@ -55,9 +55,8 @@ configure_services() {
       # filtering mode: only wcli
       export WALLARM_WD__COMPONENT_WCLI=true
     else
-      # all mode: wstore + appstructure + wcli
+      # all mode: wstore + wcli
       export WALLARM_WD__COMPONENT_WSTORE=true
-      export WALLARM_WD__COMPONENT_APPSTRUCTURE=true
       export WALLARM_WD__COMPONENT_WCLI=true
     fi
     sed -i -e '/wallarm-apifw-loc/d' \
