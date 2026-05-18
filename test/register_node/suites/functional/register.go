@@ -184,6 +184,20 @@ var commonAllowedErrors = []string{
 	// stops the positive case from flapping. Pattern is narrow enough to
 	// keep other deployCloudNode errors visible.
 	`label \\"group\\" is required for this registration type`,
+	// NODE-7601: nsf_download is a best-effort init step (optional: true).
+	// All of its failure paths log at warn level and return nil from Start
+	// so the legacy register/datasync/ipfeed/apispec flow continues. The
+	// warn lines carry a JSON "error" field which the (?i)error regex below
+	// would otherwise flag. Allow all nsf_download warn output across
+	// subscriptions: the component is meta and never fails the init.
+	`"component":"nsf_download".*"message":"manifest fetch failed"`,
+	`"component":"nsf_download".*"message":"manifest decrypt failed"`,
+	`"component":"nsf_download".*"message":"resource fetch/decrypt failed; skipping"`,
+	`"component":"nsf_download".*"message":"no storage configured for region`,
+	`"component":"nsf_download".*"message":"derive key failed"`,
+	`"component":"nsf_download".*"message":"streaming encrypter init failed"`,
+	`"component":"nsf_download".*"message":"license PEM write failed"`,
+	`"component":"nsf_download".*"message":"envelope resource skipped: no license PEM in manifest"`,
 }
 
 // negativeAllowedErrors is the allow-list used by every case in
