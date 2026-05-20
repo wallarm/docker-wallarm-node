@@ -65,6 +65,10 @@ BUILD_AIO_DOCKER_UPSTREAM:
     - .before-docker-build
   rules:
     - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate|cve-scan)$/ && $CI_PIPELINE_SOURCE == "pipeline"'
+    - if: '$X_CI_BUILD_KIND == "cve-scan" && $CI_PIPELINE_SOURCE == "api"'
+      variables:
+        UPSTREAM_CI_PIPELINE_REF_NAME: main
+        IMAGE_TAG: cve-scan-${CI_PIPELINE_ID}
   variables:
     SKIP_AIO_DOWNLOAD: true
     NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -74,9 +78,9 @@ BUILD_AIO_DOCKER_UPSTREAM:
     - echo $AIO_VERSION
     - ls -la apps/aio/artifacts/final/
     - mkdir -p build/linux/amd64/opt/wallarm
-    - sh apps/aio/artifacts/final/wallarm-${AIO_VERSION}.x86_64-musl.sh --keep --noexec --target build/linux/amd64/opt/wallarm
+    - sh apps/aio/artifacts/final/wallarm-*.x86_64-musl.sh --keep --noexec --target build/linux/amd64/opt/wallarm
     - mkdir -p build/linux/arm64/opt/wallarm
-    - sh apps/aio/artifacts/final/wallarm-${AIO_VERSION}.aarch64-musl.sh --keep --noexec --target build/linux/arm64/opt/wallarm
+    - sh apps/aio/artifacts/final/wallarm-*.aarch64-musl.sh --keep --noexec --target build/linux/arm64/opt/wallarm
     - make docker-image-build
   needs:
     - project: wallarm-node/meganode
@@ -101,6 +105,8 @@ BUILD_AIO_DOCKER:
   extends:
     - .before-docker-build
   rules:
+    - if: '$X_CI_BUILD_KIND == "cve-scan" && $CI_PIPELINE_SOURCE == "api"'
+      when: never
     - if: '$X_CI_BUILD_KIND =~ /^(develop|production|release-candidate|cve-scan)$/ && $CI_PIPELINE_SOURCE != "pipeline"'
   script:
     - make docker-image-build
