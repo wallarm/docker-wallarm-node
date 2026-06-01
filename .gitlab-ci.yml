@@ -68,7 +68,7 @@ BUILD_AIO_DOCKER_UPSTREAM:
     - if: '$X_CI_BUILD_KIND == "cve-scan" && $CI_PIPELINE_SOURCE == "api"'
       variables:
         UPSTREAM_CI_PIPELINE_REF_NAME: main
-        IMAGE_TAG: cve-scan-${CI_PIPELINE_ID}
+        IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
   variables:
     SKIP_AIO_DOWNLOAD: true
     NODE_DOCKER_IMAGE: ${CI_REGISTRY_IMAGE}/${IMAGE_NAME}:${IMAGE_TAG}
