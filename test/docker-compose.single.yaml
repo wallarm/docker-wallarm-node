@@ -1,6 +1,8 @@
 services:
   node:
     image: ${NODE_IMAGE}
+    ulimits:
+      core: -1
     ports:
       - "5000:80"
     environment:
@@ -16,6 +18,7 @@ services:
     volumes:
       - "./nginx_conf/wallarm_node.conf:/etc/nginx/http.d/default.conf"
       - "./nginx_conf/nginx_node.conf:/etc/nginx/http.d/workload.conf"
+      - "./cores:/cores"
 
   pytest:
     image: dkr.wallarm.com/tests/smoke-tests:latest
