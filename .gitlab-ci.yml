@@ -8,6 +8,8 @@ include:
     file: '/applications/common/tests/docker-scout.yaml'
     inputs:
       scout_image: '${NODE_DOCKER_IMAGE}'
+      # bucket sub-path organizes the CVE dashboard tree: <node-type>/<artifact>/<release line>
+      scout_sbom_bucket: 'wlrm-devops-cve-dashboard/nginx-node/aio-docker/7.x'
       # 'true' also publishes SBOMs from MR/dev pipelines (wanted for E2E validation
       # of the dashboard ingestion); releases are additionally forced via workflow rules
       scout_publish_sbom: 'true'
