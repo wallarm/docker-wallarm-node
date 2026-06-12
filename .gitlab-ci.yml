@@ -2,6 +2,16 @@ include:
   - local: .gitlab/common.yaml
   - local: .gitlab/tests.yaml
   - local: .gitlab/tests_build.yaml
+  # Docker Scout CVE scanning (shared DevOps template, publishes SBOM to the CVE dashboard)
+  - project: 'devops-public/pipelines'
+    ref: '${X_DEVOPS_SHARED_PIPELINES_STABLE}'
+    file: '/applications/common/tests/docker-scout.yaml'
+    inputs:
+      scout_image: '${NODE_DOCKER_IMAGE}'
+      # 'true' also publishes SBOMs from MR/dev pipelines (wanted for E2E validation
+      # of the dashboard ingestion); releases are additionally forced via workflow rules
+      scout_publish_sbom: 'true'
+      stage: 'scan'
 
 default:
   id_tokens:
@@ -12,8 +22,8 @@ default:
 
 stages:
   - build
-  - test
   - scan
+  - test
   - publish
 
 variables:
@@ -42,6 +52,11 @@ workflow:
       variables:
         X_CI_BUILD_KIND: production
         IMAGE_TAG: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "pipeline" && $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
+      variables:
+        IMAGE_TAG: $AIO_VERSION
+        SCOUT_PUBLISH_SBOM: "true" # release artifacts must land on the CVE dashboard
+      when: always
     - if: $CI_PIPELINE_SOURCE == "pipeline"
       variables:
         IMAGE_TAG: $AIO_VERSION
@@ -114,30 +129,18 @@ BUILD_AIO_DOCKER:
     reports:
       dotenv: variables.env
 
-# Vulnerability scan with report
+# Vulnerability scan with report (docker_scout_scan comes from the shared
+# docker-scout template, see include; only needs/rules are customized here)
 
-DOCKER_SCOUT_SCAN_ARTIFACT:
-  stage: scan
-  image: europe-docker.pkg.dev/wallarm-infra/wallarm-cloud-europe/wallarm-node/node-gitlab-runner/docker:v0.6.3
+docker_scout_scan:
   needs:
     - job: BUILD_AIO_DOCKER_UPSTREAM
       optional: true
     - job: BUILD_AIO_DOCKER
       optional: true
-  variables:
-    DOCKER_SCOUT_ARGS: "--exit-code --only-severity critical,high --ignore-suppressed"
   rules:
-    - if: $X_CI_BUILD_KIND == "cve-scan"
-      allow_failure: true
-    - if: $X_CI_BUILD_KIND =~ /^(develop)$/
-      allow_failure: true
-    - if: $X_CI_BUILD_KIND =~ /^(production|release-candidate)$/
-      allow_failure: true # temporary 
-  extends:
-    - .before-scout-scan
-  script:
-    - docker-scout config organization wallarm
-    - make docker-scout-scan
+    - if: $X_CI_BUILD_KIND =~ /^(develop|cve-scan|production|release-candidate)$/
+    - when: never
 
 PUBLISH_GUARD:
   stage: publish
