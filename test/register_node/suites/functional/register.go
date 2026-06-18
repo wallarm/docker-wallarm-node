@@ -294,6 +294,7 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 					"starting in fallback mode",
 					`job "[a-z_]+" failed:.*access denied`,
 					`job "[a-z_]+" failed:.*context canceled`,
+					`wallarm mcp:.*Error loading cloud config:.*wapi returned error status`,
 				)
 			}
 			if subscription == "WAAP" {
