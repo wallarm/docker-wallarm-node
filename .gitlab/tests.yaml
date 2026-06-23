@@ -133,9 +133,18 @@ TEST_WSTORE_COMPAT:
     - *x_script_docker_login
     - docker pull -q ${NODE_DOCKER_IMAGE}
     - docker pull -q ${WSTORE_IMAGE}
+    - mkdir -p "${CI_PROJECT_DIR}/test/cores" && chmod 1777 "${CI_PROJECT_DIR}/test/cores"
+    - echo "/cores/core.%e.%p.%t" | tee /proc/sys/kernel/core_pattern
   script:
     - cd test/wstore_compat
     - make test-wstore-compat-ci
+  after_script:
+    - ls -la "${CI_PROJECT_DIR}/test/cores/"
+  artifacts:
+    when: on_failure
+    expire_in: 14 days
+    paths:
+      - test/cores/**
   tags:
     - node-c2r4-stable-dind-amd
 

@@ -38,6 +38,12 @@ function get_logs_clean_and_exit() {
   get_logs node
   [[ $NODE_MODE == "split" ]] && get_logs post-analytics
 
+  if [[ -d "${PWD}/test/cores" ]] && [[ -n "$(ls -A "${PWD}/test/cores")" ]]; then
+    mkdir -p "${LOGS_DIR}/cores"
+    cp -a "${PWD}/test/cores/." "${LOGS_DIR}/cores/"
+    ls -la "${LOGS_DIR}/cores/"
+  fi
+
   if [[ "${CI:-false}" == "true" ]]; then
           echo "We run in CI. Archiving logs ..."
           tar -czvf node-logs-${ARCH}-${NODE_MODE}.tar.gz -C ${LOGS_DIR} ./
@@ -127,6 +133,10 @@ check_mandatory_vars
 #single or split mode
 NODE_MODE=$1
 LOGS_DIR="${PWD}/test/logs/${NODE_MODE}"
+
+# Enable core dumps from in-container nginx workers.
+mkdir -p "${PWD}/test/cores" && chmod 1777 "${PWD}/test/cores"
+echo "/cores/core.%e.%p.%t" | tee /proc/sys/kernel/core_pattern
 
 COMPOSE_CMD="NODE_IMAGE=$IMAGE NODE_GROUP_NAME=$NODE_GROUP_NAME docker-compose -p $NODE_MODE -f test/docker-compose.$NODE_MODE.yaml"
 

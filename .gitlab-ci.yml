@@ -24,7 +24,7 @@ variables:
   IMAGE_NAME: node
   UPSTREAM_CI_COMMIT_REF_NAME: main
   AIO_VERSION:
-    value: "7.1.0-rc1"
+    value: "7.1.0-rc2"
     description: "AIO upstream version"
   X_CI_BUILD_KIND:
     description: either develop or production
