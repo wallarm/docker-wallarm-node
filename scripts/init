@@ -130,6 +130,15 @@ then
   exec /opt/wallarm/usr/bin/wd --config "$WD_CONFIG"
 else
   /opt/wallarm/usr/bin/wd --config "$WD_CONFIG" &
-  /opt/wallarm/usr/bin/wd --config "$WD_CONFIG" ctl status --wait-init
+  # Gate nginx on wd init (independent of WALLARM_FALLBACK): in strict mode
+  # (WALLARM_IGNORE_REGISTER_ERROR=false) wd exits on init failure and wait-init
+  # returns non-zero -> do not start nginx, exit so the container falls and the
+  # orchestrator restarts (fail closed). Default/fallback: wait-init exits 0 and
+  # nginx starts as before. --wait-timeout=300s bounds a stuck init; a dead wd
+  # short-circuits faster via the pidfile/socket check.
+  if ! /opt/wallarm/usr/bin/wd --config "$WD_CONFIG" ctl status --wait-init --wait-timeout=300s; then
+    echo "ERROR: wd init failed (strict mode); refusing to start nginx (fail-closed)" >&2
+    exit 1
+  fi
   exec /usr/sbin/nginx -g "daemon off;"
 fi
