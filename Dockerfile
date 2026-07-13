@@ -58,7 +58,7 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 COPY --chown=wallarm:wallarm build/$TARGETPLATFORM/ /
 
 # Verify required binaries are present in the installer package.
-# If wd is missing, it means the meganode installer is too old (predates NODE-6240).
+# If wd is missing, it means the meganode installer is too old (predates the wd-based packaging).
 # Run tests via meganode CI (BUILD_AIO_DOCKER_UPSTREAM), not by pushing directly to aio-docker.
 RUN test -f /opt/wallarm/usr/bin/wd || \
     { echo "ERROR: /opt/wallarm/usr/bin/wd is missing from the installer package. Use meganode CI pipeline to build (BUILD_AIO_DOCKER_UPSTREAM), not a direct GCS download."; exit 1; }
