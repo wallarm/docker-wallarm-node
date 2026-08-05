@@ -198,6 +198,17 @@ var commonAllowedErrors = []string{
 	`"component":"nsf_download".*"message":"streaming encrypter init failed"`,
 	`"component":"nsf_download".*"message":"license PEM write failed"`,
 	`"component":"nsf_download".*"message":"envelope resource skipped: no license PEM in manifest"`,
+	// The Cloud denies wd's pre-push credential check while a node is
+	// unregistered or its subscription is limited -- what the negative cases
+	// here create. wd logs it at info and retries; the denial is tracked in
+	// wallarm_wd_metrics_push_errors_total.
+	`"message":"metrics push initialization failed`,
+	`"message":"metrics push initialization retry failed`,
+	// Relayed from the scrape library after a target has been down longer than
+	// promscrape's error-suppression window. Allows every such line, so a
+	// broken scrape config will not fail here: that belongs to
+	// wallarm_wd_scrape_errors_total.
+	`"source":"promscrape".*"message":"cannot scrape target`,
 }
 
 // negativeAllowedErrors is the allow-list used by every case in
