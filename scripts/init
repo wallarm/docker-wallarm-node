@@ -49,16 +49,8 @@ configure_services() {
   if [ x"$WALLARM_APIFW_ENABLE" = x"false" ] \
     || [ x"$WALLARM_APIFW_ENABLE" = x"False" ]
   then
-    # Disable api-firewall via wd selective component mode.
-    # Explicitly list all other processes so selective mode enables them only.
-    if [ -n "$POSTANALYTIC_ADDRESS" ]; then
-      # filtering mode: only wcli
-      export WALLARM_WD__COMPONENT_WCLI=true
-    else
-      # all mode: wstore + wcli
-      export WALLARM_WD__COMPONENT_WSTORE=true
-      export WALLARM_WD__COMPONENT_WCLI=true
-    fi
+    # wd itself honours WALLARM_APIFW_ENABLE and does not start api-firewall;
+    # only nginx's apifw locations need to be dropped here.
     sed -i -e '/wallarm-apifw-loc/d' \
       /etc/nginx/nginx.conf
   fi
