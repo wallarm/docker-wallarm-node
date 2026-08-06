@@ -456,6 +456,13 @@ func (testSuite *RegisterSuite) TestRegisterNode(t provider.T) {
 			if paramsTest.ExpectedError != "" {
 				allowed = append(allowed, regexp.QuoteMeta(paramsTest.ExpectedError))
 			}
+			if !paramsTest.ExpectFail {
+				// The Cloud transiently denies single register attempts under
+				// this suite's parallel registrations; wd retries them itself,
+				// and the final "node registration done" is still required
+				// above. A failed attempt before that success is not a defect.
+				allowed = append(allowed, `"component":"register".*"message":"node registration done with error"`)
+			}
 			errorLines := filterUnexpectedErrors(rawErrorLines, allowed)
 
 			if len(errorLines) > 0 {
